@@ -236,6 +236,12 @@ button.primary.playing { background: transparent; color: var(--accent); }
   * { transition-duration: .01ms !important; }
 }
 
+.field label.switch, .switch { display: flex; align-items: center; gap: var(--space-3); cursor: pointer; text-transform: none; letter-spacing: 0; font-size: var(--text-sm); color: var(--text); margin-bottom: var(--space-1); }
+.switch input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; margin: 0; }
+.field-note { margin: 0; color: var(--text-muted); font-size: var(--text-xs); }
+.field.off { opacity: .45; }
+.field.off select { cursor: not-allowed; }
+
 </style>
 </head>
 <body>
@@ -285,6 +291,13 @@ button.primary.playing { background: transparent; color: var(--accent); }
         </select>
       </div>
       <div class="field">
+        <label class="switch">
+          <input type="checkbox" id="accents">
+          <span>Акценты по долям</span>
+        </label>
+        <p class="field-note">Выключено — метроном стучит абсолютно одинаково.</p>
+      </div>
+      <div class="field" id="beatsField">
         <label for="beats">Доли в такте</label>
         <select id="beats">
           <option>1</option><option>2</option><option>3</option><option selected>4</option>
@@ -335,6 +348,7 @@ const state = {
   bpm: 90,
   subdiv: 1,
   beats: 4,
+  accents: false,
   volume: 0.8,
   playing: false,
   activeId: null,
@@ -351,7 +365,7 @@ function load() {
     if (Array.isArray(data.sections)) state.sections = data.sections;
     if (data.last) Object.assign(state, data.last);
     state.playing = false;
-  } catch (e) { /* хранилище недоступно — работаем в памяти */ }
+  } catch (e) {}
   return Promise.resolve();
 }
 
@@ -359,12 +373,11 @@ function save() {
   try {
     localStorage.setItem(STORE_KEY, JSON.stringify({
       sections: state.sections,
-      last: { bpm: state.bpm, subdiv: state.subdiv, beats: state.beats, volume: state.volume, activeId: state.activeId },
+      last: { bpm: state.bpm, subdiv: state.subdiv, beats: state.beats, accents: state.accents, volume: state.volume, activeId: state.activeId },
     }));
-  } catch (e) { /* игнорируем */ }
+  } catch (e) {}
 }
 
-// ——— Звук ————————————————————————————————————————————————————
 let ctx = null;
 let nextNoteTime = 0;
 let step = 0;               // индекс щелчка внутри такта (доли × деление)
@@ -378,31 +391,69 @@ function ensureCtx() {
   return ctx;
 }
 
+let noiseBuf = null;
+function noiseBuffer() {
+  if (noiseBuf) return noiseBuf;
+  const len = Math.floor(ctx.sampleRate * 0.05);
+  noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const d = noiseBuf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+  return noiseBuf;
+}
+
+// Короткий деревянный щелчок: шумовой транзиент + тональное тело.
 function click(time, kind) {
-  const freq = kind === "accent" ? 1600 : kind === "beat" ? 1050 : 760;
-  const peak = (kind === "accent" ? 1 : kind === "beat" ? 0.65 : 0.34) * state.volume;
+  const P = {
+    accent: { tone: 1500, noise: 3200, gain: 1.0, dur: 0.045 },
+    beat:   { tone: 1150, noise: 2500, gain: 0.8, dur: 0.045 },
+    sub:    { tone: 1150, noise: 2500, gain: 0.32, dur: 0.03 },
+  }[kind];
+  const level = P.gain * state.volume;
+
+  const out = ctx.createGain();
+  out.gain.value = 1;
+  out.connect(ctx.destination);
+
+  // тональное тело
   const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = "square";
-  osc.frequency.value = freq;
-  gain.gain.setValueAtTime(0.0001, time);
-  gain.gain.exponentialRampToValueAtTime(Math.max(peak, 0.0002), time + 0.002);
-  gain.gain.exponentialRampToValueAtTime(0.0001, time + (kind === "sub" ? 0.035 : 0.06));
-  osc.connect(gain).connect(ctx.destination);
+  const og = ctx.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(P.tone, time);
+  osc.frequency.exponentialRampToValueAtTime(P.tone * 0.6, time + P.dur);
+  og.gain.setValueAtTime(0.0001, time);
+  og.gain.exponentialRampToValueAtTime(level * 0.55, time + 0.001);
+  og.gain.exponentialRampToValueAtTime(0.0001, time + P.dur);
+  osc.connect(og).connect(out);
   osc.start(time);
-  osc.stop(time + 0.09);
+  osc.stop(time + P.dur + 0.02);
+
+  // шумовой транзиент — «дерево»
+  const src = ctx.createBufferSource();
+  src.buffer = noiseBuffer();
+  const bp = ctx.createBiquadFilter();
+  bp.type = "bandpass";
+  bp.frequency.value = P.noise;
+  bp.Q.value = 1.4;
+  const ng = ctx.createGain();
+  ng.gain.setValueAtTime(0.0001, time);
+  ng.gain.exponentialRampToValueAtTime(level, time + 0.001);
+  ng.gain.exponentialRampToValueAtTime(0.0001, time + P.dur * 0.55);
+  src.connect(bp).connect(ng).connect(out);
+  src.start(time);
+  src.stop(time + P.dur + 0.02);
 }
 
 function scheduler() {
   const perStep = 60 / state.bpm / state.subdiv;
+  const beatsInBar = state.accents ? state.beats : 1;
   while (nextNoteTime < ctx.currentTime + LOOKAHEAD) {
     const inBeat = step % state.subdiv;
-    const beat = Math.floor(step / state.subdiv) % state.beats;
-    const kind = inBeat !== 0 ? "sub" : beat === 0 ? "accent" : "beat";
+    const beat = Math.floor(step / state.subdiv) % beatsInBar;
+    const kind = inBeat !== 0 ? "sub" : (state.accents && beat === 0) ? "accent" : "beat";
     click(nextNoteTime, kind);
     if (inBeat === 0) flash(beat, nextNoteTime);
     nextNoteTime += perStep;
-    step = (step + 1) % (state.beats * state.subdiv);
+    step = (step + 1) % (beatsInBar * state.subdiv);
   }
 }
 
@@ -458,14 +509,15 @@ const SUB_LABEL = { 1: "четверти ♩", 2: "восьмые ♪", 3: "тр
 // ——— DOM —————————————————————————————————————————————————————
 const el = {};
 for (const id of ["currentName","beatDots","bpmInput","bpmRange","marking","subdiv","beats","volume",
-  "playBtn","tapBtn","saveBtn","list","empty","count","modal","nameInput","modalMeta",
+  "accents","beatsField","playBtn","tapBtn","saveBtn","list","empty","count","modal","nameInput","modalMeta",
   "cancelBtn","confirmBtn","themeBtn"]) el[id] = document.getElementById(id);
 
 function renderDots() {
   el.beatDots.innerHTML = "";
-  for (let i = 0; i < state.beats; i++) {
+  const n = state.accents ? state.beats : 1;
+  for (let i = 0; i < n; i++) {
     const d = document.createElement("span");
-    d.className = "dot" + (i === 0 ? " accent" : "");
+    d.className = "dot" + (state.accents && i === 0 ? " accent" : "");
     el.beatDots.appendChild(d);
   }
 }
@@ -477,6 +529,9 @@ function renderControls() {
   el.subdiv.value = String(state.subdiv);
   el.beats.value = String(state.beats);
   el.volume.value = Math.round(state.volume * 100);
+  el.accents.checked = state.accents;
+  el.beats.disabled = !state.accents;
+  el.beatsField.classList.toggle("off", !state.accents);
   const active = state.sections.find(s => s.id === state.activeId);
   el.currentName.textContent = active ? active.name : "Без раздела";
 }
@@ -492,7 +547,7 @@ function renderList() {
     const main = document.createElement("button");
     main.type = "button";
     main.className = "item-main";
-    main.innerHTML = `<div class="item-name"></div><div class="item-meta">${s.bpm} BPM · ${SUB_LABEL[s.subdiv]} · ${s.beats} доли</div>`;
+    main.innerHTML = `<div class="item-name"></div><div class="item-meta">${s.bpm} BPM · ${SUB_LABEL[s.subdiv]} · ${s.accents ? s.beats + " доли" : "без акцентов"}</div>`;
     main.querySelector(".item-name").textContent = s.name;
     main.addEventListener("click", () => applySection(s.id));
 
@@ -501,7 +556,7 @@ function renderList() {
     actions.append(
       mini("Переименовать", "M4 20h4l10-10-4-4L4 16v4z", () => openModal(s.id)),
       mini("Обновить текущими настройками", "M4 12a8 8 0 1 1 2.3 5.7M4 12V7m0 5h5", () => {
-        Object.assign(s, { bpm: state.bpm, subdiv: state.subdiv, beats: state.beats });
+        Object.assign(s, { bpm: state.bpm, subdiv: state.subdiv, beats: state.beats, accents: state.accents });
         save(); renderList();
       }),
       mini("Удалить", "M6 7h12M9 7V5h6v2M8 7l1 13h6l1-13", () => {
@@ -534,6 +589,7 @@ function applySection(id) {
   setBpm(s.bpm, true);
   state.subdiv = s.subdiv;
   state.beats = s.beats;
+  state.accents = !!s.accents;
   renderDots();
   renderControls();
   renderList();
@@ -557,8 +613,8 @@ function openModal(id) {
   const s = id ? state.sections.find(x => x.id === id) : null;
   el.nameInput.value = s ? s.name : "";
   el.modalMeta.textContent = s
-    ? `${s.bpm} BPM · ${SUB_LABEL[s.subdiv]} · ${s.beats} доли`
-    : `${state.bpm} BPM · ${SUB_LABEL[state.subdiv]} · ${state.beats} доли`;
+    ? `${s.bpm} BPM · ${SUB_LABEL[s.subdiv]} · ${s.accents ? s.beats + " доли" : "без акцентов"}`
+    : `${state.bpm} BPM · ${SUB_LABEL[state.subdiv]} · ${state.accents ? state.beats + " доли" : "без акцентов"}`;
   el.modal.hidden = false;
   el.nameInput.focus();
 }
@@ -571,7 +627,7 @@ el.confirmBtn.addEventListener("click", () => {
     if (s) s.name = name;
   } else {
     const s = { id: String(Date.now()) + Math.random().toString(16).slice(2, 6), name,
-      bpm: state.bpm, subdiv: state.subdiv, beats: state.beats };
+      bpm: state.bpm, subdiv: state.subdiv, beats: state.beats, accents: state.accents };
     state.sections.push(s);
     state.activeId = s.id;
   }
@@ -599,6 +655,13 @@ document.querySelectorAll(".step").forEach(b => b.addEventListener("click", () =
 
 el.subdiv.addEventListener("change", e => { state.subdiv = Number(e.target.value); save(); restartIfPlaying(); });
 el.beats.addEventListener("change", e => { state.beats = Number(e.target.value); renderDots(); save(); restartIfPlaying(); });
+el.accents.addEventListener("change", e => {
+  state.accents = e.target.checked;
+  el.beats.disabled = !state.accents;
+  el.beatsField.classList.toggle("off", !state.accents);
+  renderDots(); save(); restartIfPlaying();
+});
+
 el.volume.addEventListener("input", e => { state.volume = Number(e.target.value) / 100; save(); });
 
 // Тап темпа
