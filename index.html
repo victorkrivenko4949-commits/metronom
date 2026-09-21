@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Метроном — разделы и темп</title>
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 4 L27 28 H5 Z' fill='none' stroke='%23c9a227' stroke-width='2.5'/%3E%3Cpath d='M16 6 L16 26' stroke='%23c9a227' stroke-width='2.5'/%3E%3C/svg%3E">
+<style>
+:root {
+  --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+  --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+  --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+  --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+
+  --space-1: .25rem; --space-2: .5rem; --space-3: .75rem; --space-4: 1rem;
+  --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem;
+  --space-12: 3rem; --space-16: 4rem;
+
+  --radius: 14px;
+  --radius-sm: 10px;
+}
+
+[data-theme="dark"] {
+  --bg: oklch(0.19 0.012 60);
+  --surface: oklch(0.235 0.014 62);
+  --surface-2: oklch(0.28 0.016 62);
+  --border: oklch(0.36 0.018 62);
+  --text: oklch(0.95 0.008 80);
+  --text-muted: oklch(0.72 0.014 72);
+  --accent: oklch(0.79 0.135 82);
+  --accent-ink: oklch(0.22 0.03 70);
+  --shadow: 0 18px 44px oklch(0.12 0.01 60 / 0.55);
+}
+
+:root, [data-theme="light"] {
+  --bg: oklch(0.965 0.012 82);
+  --surface: oklch(0.995 0.006 85);
+  --surface-2: oklch(0.945 0.014 82);
+  --border: oklch(0.87 0.016 80);
+  --text: oklch(0.26 0.018 62);
+  --text-muted: oklch(0.5 0.018 66);
+  --accent: oklch(0.62 0.12 72);
+  --accent-ink: oklch(0.99 0.005 85);
+  --shadow: 0 16px 38px oklch(0.6 0.02 70 / 0.16);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Satoshi", ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--text-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-5) clamp(var(--space-4), 4vw, var(--space-12));
+  border-bottom: 1px solid var(--border);
+}
+.brand { display: flex; align-items: center; gap: var(--space-3); font-weight: 700; letter-spacing: -0.01em; }
+.logo { width: 26px; height: 26px; color: var(--accent); }
+
+.icon-btn {
+  display: grid; place-items: center;
+  width: 38px; height: 38px;
+  border: 1px solid var(--border); border-radius: 50%;
+  background: var(--surface); color: var(--text); cursor: pointer;
+  transition: background .18s ease, color .18s ease;
+}
+.icon-btn:hover { background: var(--surface-2); }
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: var(--space-6);
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: clamp(var(--space-6), 4vw, var(--space-12)) clamp(var(--space-4), 4vw, var(--space-12)) var(--space-16);
+  align-items: start;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: clamp(var(--space-5), 3vw, var(--space-8));
+}
+
+.eyebrow {
+  margin: 0 0 var(--space-5);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--text-muted);
+}
+
+.pendulum {
+  display: grid; place-items: center;
+  padding: var(--space-5) 0 var(--space-6);
+}
+.beats { display: flex; gap: var(--space-3); flex-wrap: wrap; justify-content: center; }
+.dot {
+  width: 13px; height: 13px; border-radius: 50%;
+  border: 1.5px solid var(--border); background: transparent;
+  transition: transform .09s ease, background-color .09s ease, border-color .09s ease;
+}
+.dot.accent { border-color: var(--accent); }
+.dot.on { background: var(--accent); border-color: var(--accent); transform: scale(1.5); }
+
+.tempo { display: flex; align-items: center; justify-content: center; gap: var(--space-5); }
+.step {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--surface-2);
+  color: var(--text); font-size: var(--text-lg); line-height: 1; cursor: pointer;
+}
+.step:hover { border-color: var(--accent); color: var(--accent); }
+.tempo-value { display: flex; align-items: baseline; gap: var(--space-2); }
+#bpmInput {
+  width: 5.2ch; border: 0; background: transparent; color: var(--text);
+  font: 900 clamp(3rem, 9vw, 4.75rem)/1 "Satoshi", sans-serif;
+  letter-spacing: -0.04em; text-align: center; padding: 0;
+  font-variant-numeric: tabular-nums;
+}
+#bpmInput:focus-visible { outline: 2px solid var(--accent); outline-offset: 6px; border-radius: 8px; }
+#bpmInput::-webkit-outer-spin-button, #bpmInput::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+#bpmInput { -moz-appearance: textfield; }
+.unit { font-size: var(--text-xs); letter-spacing: .14em; color: var(--text-muted); }
+.marking { margin: var(--space-2) 0 var(--space-6); text-align: center; color: var(--text-muted); font-size: var(--text-sm); font-style: italic; }
+
+.slider {
+  -webkit-appearance: none; appearance: none; width: 100%;
+  height: 4px; border-radius: 4px; background: var(--surface-2);
+  border: 1px solid var(--border); cursor: pointer;
+}
+.slider.slim { margin-top: var(--space-3); }
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent); border: 3px solid var(--surface); box-shadow: 0 0 0 1px var(--border);
+}
+.slider::-moz-range-thumb {
+  width: 20px; height: 20px; border: 3px solid var(--surface); border-radius: 50%; background: var(--accent);
+}
+.ticks {
+  display: flex; justify-content: space-between;
+  margin-top: var(--space-2); color: var(--text-muted); font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: var(--space-4); margin-top: var(--space-8);
+}
+.field label { white-space: nowrap;
+  display: block; margin-bottom: var(--space-2);
+  font-size: var(--text-xs); letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);
+}
+select, #nameInput {
+  width: 100%; padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface-2); color: var(--text);
+  font: inherit; font-size: var(--text-sm);
+}
+select:focus-visible, #nameInput:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.controls { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-8); }
+button.primary, button.ghost {
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-sm); font: inherit; font-size: var(--text-sm); font-weight: 700;
+  cursor: pointer; transition: transform .12s ease, background .18s ease, border-color .18s ease;
+}
+button.primary { border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); flex: 1 1 160px; }
+button.ghost { border: 1px solid var(--border); background: transparent; color: var(--text); }
+button.primary:hover, button.ghost:hover { transform: translateY(-1px); }
+button.ghost:hover { border-color: var(--accent); color: var(--accent); }
+button.primary.playing { background: transparent; color: var(--accent); }
+
+.library-head { display: flex; align-items: center; justify-content: space-between; }
+.library h2 { margin: 0; font-size: var(--text-lg); letter-spacing: -0.01em; }
+.count {
+  min-width: 26px; padding: 0 var(--space-2); border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  text-align: center; font-size: var(--text-xs); color: var(--text-muted);
+}
+.hint { margin: var(--space-2) 0 var(--space-5); color: var(--text-muted); font-size: var(--text-xs); }
+
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.item {
+  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: var(--space-3);
+  padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  transition: border-color .18s ease;
+}
+.item:hover { border-color: var(--accent); }
+.item.active { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.item-main { text-align: left; background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; min-width: 0; }
+.item-name { font-weight: 700; font-size: var(--text-sm); overflow-wrap: anywhere; }
+.item-meta { color: var(--text-muted); font-size: var(--text-xs); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.item-actions { display: flex; gap: var(--space-1); }
+.mini {
+  width: 32px; height: 32px; display: grid; place-items: center;
+  border: 1px solid transparent; border-radius: 8px; background: transparent;
+  color: var(--text-muted); cursor: pointer;
+}
+.mini:hover { color: var(--accent); border-color: var(--border); }
+
+.empty { padding: var(--space-6) var(--space-4); text-align: center; color: var(--text-muted); font-size: var(--text-sm); border: 1px dashed var(--border); border-radius: var(--radius-sm); }
+.empty p { margin: 0; }
+
+.modal[hidden] { display: none; }
+.modal {
+  position: fixed; inset: 0; z-index: 20;
+  display: grid; place-items: center; padding: var(--space-4);
+  background: oklch(0.15 0.01 60 / .6); backdrop-filter: blur(3px);
+}
+.modal-card {
+  width: min(420px, 100%); background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: var(--space-6); box-shadow: var(--shadow);
+}
+.modal-card h3 { margin: 0 0 var(--space-4); font-size: var(--text-lg); }
+.modal-meta { margin: var(--space-3) 0 0; color: var(--text-muted); font-size: var(--text-xs); }
+.modal-actions { display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-6); }
+
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: .01ms !important; }
+}
+
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 32 32" aria-label="Логотип метронома" role="img">
+      <path d="M16 3.5 L27.5 28.5 H4.5 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M16 26.5 L25 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="24" cy="10" r="2.6" fill="currentColor"/>
+    </svg>
+    <span>Метроном</span>
+  </div>
+  <button class="icon-btn" id="themeBtn" type="button" aria-label="Сменить тему">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4" stroke-linecap="round"/></svg>
+  </button>
+</header>
+
+<main class="layout">
+  <section class="panel player" aria-label="Метроном">
+    <p class="eyebrow" id="currentName">Без раздела</p>
+
+    <div class="pendulum" aria-hidden="true">
+      <div class="beats" id="beatDots"></div>
+    </div>
+
+    <div class="tempo">
+      <button class="step" type="button" data-delta="-1" aria-label="Минус 1">−</button>
+      <div class="tempo-value">
+        <input id="bpmInput" type="number" min="1" max="500" value="90" inputmode="numeric" aria-label="Темп в ударах в минуту">
+        <span class="unit">BPM</span>
+      </div>
+      <button class="step" type="button" data-delta="1" aria-label="Плюс 1">+</button>
+    </div>
+    <p class="marking" id="marking">Andante</p>
+
+    <input id="bpmRange" class="slider" type="range" min="1" max="500" value="90" aria-label="Ползунок темпа">
+    <div class="ticks"><span>1</span><span>125</span><span>250</span><span>375</span><span>500</span></div>
+
+    <div class="row">
+      <div class="field">
+        <label for="subdiv">Деление</label>
+        <select id="subdiv">
+          <option value="1">♩ Четверти</option>
+          <option value="2">♪ Восьмые</option>
+          <option value="3">♪♪♪ Триоли</option>
+          <option value="4">♬ Шестнадцатые</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="beats">Доли в такте</label>
+        <select id="beats">
+          <option>1</option><option>2</option><option>3</option><option selected>4</option>
+          <option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>12</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="volume">Громкость</label>
+        <input id="volume" type="range" min="0" max="100" value="80" class="slider slim">
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="primary" id="playBtn" type="button">Старт</button>
+      <button class="ghost" id="tapBtn" type="button">Тап темпа</button>
+      <button class="ghost" id="saveBtn" type="button">Сохранить как раздел</button>
+    </div>
+  </section>
+
+  <aside class="panel library" aria-label="Разделы">
+    <div class="library-head">
+      <h2>Разделы</h2>
+      <span class="count" id="count">0</span>
+    </div>
+    <p class="hint">Например «Соната», «Вивальди — Лето». Настройки сохраняются в этом браузере.</p>
+    <ul class="list" id="list"></ul>
+    <div class="empty" id="empty">
+      <p>Пока пусто. Настройте темп и нажмите «Сохранить как раздел».</p>
+    </div>
+  </aside>
+</main>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h3 id="modalTitle">Название раздела</h3>
+    <input id="nameInput" type="text" placeholder="Вивальди — Лето, ч. 3" maxlength="60" autocomplete="off">
+    <p class="modal-meta" id="modalMeta"></p>
+    <div class="modal-actions">
+      <button class="ghost" id="cancelBtn" type="button">Отмена</button>
+      <button class="primary" id="confirmBtn" type="button">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ——— Состояние ———————————————————————————————————————————————
+const state = {
+  bpm: 90,
+  subdiv: 1,
+  beats: 4,
+  volume: 0.8,
+  playing: false,
+  activeId: null,
+  sections: [],
+};
+
+const STORE_KEY = "metronome.sections.v1";
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return Promise.resolve();
+    const data = JSON.parse(raw);
+    if (Array.isArray(data.sections)) state.sections = data.sections;
+    if (data.last) Object.assign(state, data.last);
+    state.playing = false;
+  } catch (e) { /* хранилище недоступно — работаем в памяти */ }
+  return Promise.resolve();
+}
+
+function save() {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify({
+      sections: state.sections,
+      last: { bpm: state.bpm, subdiv: state.subdiv, beats: state.beats, volume: state.volume, activeId: state.activeId },
+    }));
+  } catch (e) { /* игнорируем */ }
+}
+
+// ——— Звук ————————————————————————————————————————————————————
+let ctx = null;
+let nextNoteTime = 0;
+let step = 0;               // индекс щелчка внутри такта (доли × деление)
+let timerId = null;
+const LOOKAHEAD = 0.1;      // сек
+const TICK = 25;            // мс
+
+function ensureCtx() {
+  if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+  if (ctx.state === "suspended") ctx.resume();
+  return ctx;
+}
+
+function click(time, kind) {
+  const freq = kind === "accent" ? 1600 : kind === "beat" ? 1050 : 760;
+  const peak = (kind === "accent" ? 1 : kind === "beat" ? 0.65 : 0.34) * state.volume;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "square";
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0.0001, time);
+  gain.gain.exponentialRampToValueAtTime(Math.max(peak, 0.0002), time + 0.002);
+  gain.gain.exponentialRampToValueAtTime(0.0001, time + (kind === "sub" ? 0.035 : 0.06));
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(time);
+  osc.stop(time + 0.09);
+}
+
+function scheduler() {
+  const perStep = 60 / state.bpm / state.subdiv;
+  while (nextNoteTime < ctx.currentTime + LOOKAHEAD) {
+    const inBeat = step % state.subdiv;
+    const beat = Math.floor(step / state.subdiv) % state.beats;
+    const kind = inBeat !== 0 ? "sub" : beat === 0 ? "accent" : "beat";
+    click(nextNoteTime, kind);
+    if (inBeat === 0) flash(beat, nextNoteTime);
+    nextNoteTime += perStep;
+    step = (step + 1) % (state.beats * state.subdiv);
+  }
+}
+
+function flash(beat, time) {
+  const delay = Math.max(0, (time - ctx.currentTime) * 1000);
+  setTimeout(() => {
+    const dots = el.beatDots.children;
+    for (const d of dots) d.classList.remove("on");
+    if (dots[beat]) dots[beat].classList.add("on");
+  }, delay);
+}
+
+function start() {
+  ensureCtx();
+  step = 0;
+  nextNoteTime = ctx.currentTime + 0.06;
+  state.playing = true;
+  timerId = setInterval(scheduler, TICK);
+  el.playBtn.textContent = "Стоп";
+  el.playBtn.classList.add("playing");
+}
+
+function stop() {
+  state.playing = false;
+  clearInterval(timerId);
+  timerId = null;
+  el.playBtn.textContent = "Старт";
+  el.playBtn.classList.remove("playing");
+  for (const d of el.beatDots.children) d.classList.remove("on");
+}
+
+function restartIfPlaying() {
+  if (state.playing) { stop(); start(); }
+}
+
+// ——— Разметка темпа —————————————————————————————————————————
+function markingFor(bpm) {
+  if (bpm < 25) return "Ларгиссимо";
+  if (bpm < 45) return "Grave";
+  if (bpm < 60) return "Largo";
+  if (bpm < 66) return "Larghetto";
+  if (bpm < 76) return "Adagio";
+  if (bpm < 108) return "Andante";
+  if (bpm < 120) return "Moderato";
+  if (bpm < 156) return "Allegro";
+  if (bpm < 176) return "Vivace";
+  if (bpm < 200) return "Presto";
+  return "Prestissimo";
+}
+
+const SUB_LABEL = { 1: "четверти ♩", 2: "восьмые ♪", 3: "триоли", 4: "шестнадцатые ♬" };
+
+// ——— DOM —————————————————————————————————————————————————————
+const el = {};
+for (const id of ["currentName","beatDots","bpmInput","bpmRange","marking","subdiv","beats","volume",
+  "playBtn","tapBtn","saveBtn","list","empty","count","modal","nameInput","modalMeta",
+  "cancelBtn","confirmBtn","themeBtn"]) el[id] = document.getElementById(id);
+
+function renderDots() {
+  el.beatDots.innerHTML = "";
+  for (let i = 0; i < state.beats; i++) {
+    const d = document.createElement("span");
+    d.className = "dot" + (i === 0 ? " accent" : "");
+    el.beatDots.appendChild(d);
+  }
+}
+
+function renderControls() {
+  el.bpmInput.value = state.bpm;
+  el.bpmRange.value = state.bpm;
+  el.marking.textContent = markingFor(state.bpm);
+  el.subdiv.value = String(state.subdiv);
+  el.beats.value = String(state.beats);
+  el.volume.value = Math.round(state.volume * 100);
+  const active = state.sections.find(s => s.id === state.activeId);
+  el.currentName.textContent = active ? active.name : "Без раздела";
+}
+
+function renderList() {
+  el.list.innerHTML = "";
+  el.empty.hidden = state.sections.length > 0;
+  el.count.textContent = state.sections.length;
+  for (const s of state.sections) {
+    const li = document.createElement("li");
+    li.className = "item" + (s.id === state.activeId ? " active" : "");
+
+    const main = document.createElement("button");
+    main.type = "button";
+    main.className = "item-main";
+    main.innerHTML = `<div class="item-name"></div><div class="item-meta">${s.bpm} BPM · ${SUB_LABEL[s.subdiv]} · ${s.beats} доли</div>`;
+    main.querySelector(".item-name").textContent = s.name;
+    main.addEventListener("click", () => applySection(s.id));
+
+    const actions = document.createElement("div");
+    actions.className = "item-actions";
+    actions.append(
+      mini("Переименовать", "M4 20h4l10-10-4-4L4 16v4z", () => openModal(s.id)),
+      mini("Обновить текущими настройками", "M4 12a8 8 0 1 1 2.3 5.7M4 12V7m0 5h5", () => {
+        Object.assign(s, { bpm: state.bpm, subdiv: state.subdiv, beats: state.beats });
+        save(); renderList();
+      }),
+      mini("Удалить", "M6 7h12M9 7V5h6v2M8 7l1 13h6l1-13", () => {
+        state.sections = state.sections.filter(x => x.id !== s.id);
+        if (state.activeId === s.id) state.activeId = null;
+        save(); renderList(); renderControls();
+      }),
+    );
+
+    li.append(main, actions);
+    el.list.appendChild(li);
+  }
+}
+
+function mini(label, path, onClick) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "mini";
+  b.title = label;
+  b.setAttribute("aria-label", label);
+  b.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${path}"/></svg>`;
+  b.addEventListener("click", onClick);
+  return b;
+}
+
+function applySection(id) {
+  const s = state.sections.find(x => x.id === id);
+  if (!s) return;
+  state.activeId = id;
+  setBpm(s.bpm, true);
+  state.subdiv = s.subdiv;
+  state.beats = s.beats;
+  renderDots();
+  renderControls();
+  renderList();
+  save();
+  restartIfPlaying();
+}
+
+function setBpm(value, silent) {
+  const n = Math.min(500, Math.max(1, Math.round(Number(value) || 1)));
+  state.bpm = n;
+  el.bpmInput.value = n;
+  el.bpmRange.value = n;
+  el.marking.textContent = markingFor(n);
+  if (!silent) save();
+}
+
+// ——— Модальное окно —————————————————————————————————————————
+let editingId = null;
+function openModal(id) {
+  editingId = id || null;
+  const s = id ? state.sections.find(x => x.id === id) : null;
+  el.nameInput.value = s ? s.name : "";
+  el.modalMeta.textContent = s
+    ? `${s.bpm} BPM · ${SUB_LABEL[s.subdiv]} · ${s.beats} доли`
+    : `${state.bpm} BPM · ${SUB_LABEL[state.subdiv]} · ${state.beats} доли`;
+  el.modal.hidden = false;
+  el.nameInput.focus();
+}
+function closeModal() { el.modal.hidden = true; editingId = null; }
+
+el.confirmBtn.addEventListener("click", () => {
+  const name = el.nameInput.value.trim() || `Раздел ${state.sections.length + 1}`;
+  if (editingId) {
+    const s = state.sections.find(x => x.id === editingId);
+    if (s) s.name = name;
+  } else {
+    const s = { id: String(Date.now()) + Math.random().toString(16).slice(2, 6), name,
+      bpm: state.bpm, subdiv: state.subdiv, beats: state.beats };
+    state.sections.push(s);
+    state.activeId = s.id;
+  }
+  save(); renderList(); renderControls(); closeModal();
+});
+el.cancelBtn.addEventListener("click", closeModal);
+el.modal.addEventListener("click", e => { if (e.target === el.modal) closeModal(); });
+el.nameInput.addEventListener("keydown", e => { if (e.key === "Enter") el.confirmBtn.click(); });
+
+// ——— События ——————————————————————————————————————————————
+el.playBtn.addEventListener("click", () => state.playing ? stop() : start());
+el.saveBtn.addEventListener("click", () => openModal(null));
+
+el.bpmRange.addEventListener("input", e => { setBpm(e.target.value); restartIfPlaying(); });
+el.bpmInput.addEventListener("input", e => {
+  const raw = e.target.value;
+  if (raw === "") return;
+  setBpm(raw); restartIfPlaying();
+});
+el.bpmInput.addEventListener("blur", () => setBpm(el.bpmInput.value));
+
+document.querySelectorAll(".step").forEach(b => b.addEventListener("click", () => {
+  setBpm(state.bpm + Number(b.dataset.delta)); restartIfPlaying();
+}));
+
+el.subdiv.addEventListener("change", e => { state.subdiv = Number(e.target.value); save(); restartIfPlaying(); });
+el.beats.addEventListener("change", e => { state.beats = Number(e.target.value); renderDots(); save(); restartIfPlaying(); });
+el.volume.addEventListener("input", e => { state.volume = Number(e.target.value) / 100; save(); });
+
+// Тап темпа
+let taps = [];
+el.tapBtn.addEventListener("click", () => {
+  const now = performance.now();
+  taps = taps.filter(t => now - t < 3000);
+  taps.push(now);
+  if (taps.length >= 2) {
+    const gaps = taps.slice(1).map((t, i) => t - taps[i]);
+    const avg = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+    setBpm(60000 / avg);
+    restartIfPlaying();
+  }
+});
+
+// Пробел — старт/стоп
+document.addEventListener("keydown", e => {
+  if (e.code === "Space" && document.activeElement.tagName !== "INPUT" && el.modal.hidden) {
+    e.preventDefault();
+    state.playing ? stop() : start();
+  }
+});
+
+// Тема
+let theme = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+document.documentElement.dataset.theme = theme;
+el.themeBtn.addEventListener("click", () => {
+  theme = theme === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = theme;
+});
+
+// ——— Инициализация ————————————————————————————————————————
+renderDots();
+renderControls();
+renderList();
+load().then(() => { renderDots(); renderControls(); renderList(); });
+
+</script>
+</body>
+</html>
