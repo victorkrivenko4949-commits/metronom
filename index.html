@@ -486,9 +486,40 @@ const state = {
 
 const STORE_KEY = "metronome.sections.v1";
 
+// ——— Хранилище: localStorage, а если он заблокирован — cookie ———————
+function setCookie(name, value, days) {
+  try {
+    const exp = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = name + "=" + encodeURIComponent(value) + ";expires=" + exp + ";path=/;SameSite=Lax";
+  } catch (e) {}
+}
+function getCookie(name) {
+  try {
+    const m = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+    return m ? decodeURIComponent(m[1]) : null;
+  } catch (e) { return null; }
+}
+function storeGet(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw !== null) return raw;
+  } catch (e) {}
+  return getCookie(key);
+}
+function storeSet(key, value) {
+  try { localStorage.setItem(key, value); return; } catch (e) {}
+  setCookie(key, value, 365);
+}
+// проверка: работает ли хоть какое-то хранилище в этом окружении
+function storageWorks() {
+  const k = "__metronome_storage_ok__";
+  storeSet(k, "1");
+  return storeGet(k) === "1";
+}
+
 function load() {
   try {
-    const raw = localStorage.getItem(STORE_KEY);
+    const raw = storeGet(STORE_KEY);
     if (!raw) return Promise.resolve();
     const data = JSON.parse(raw);
     if (Array.isArray(data.sections)) state.sections = data.sections;
@@ -499,12 +530,10 @@ function load() {
 }
 
 function save() {
-  try {
-    localStorage.setItem(STORE_KEY, JSON.stringify({
-      sections: state.sections,
-      last: { bpm: state.bpm, subdiv: state.subdiv, beats: state.beats, accents: state.accents, volume: state.volume, activeId: state.activeId },
-    }));
-  } catch (e) {}
+  storeSet(STORE_KEY, JSON.stringify({
+    sections: state.sections,
+    last: { bpm: state.bpm, subdiv: state.subdiv, beats: state.beats, accents: state.accents, volume: state.volume, activeId: state.activeId, theme },
+  }));
 }
 
 let ctx = null;
@@ -840,13 +869,25 @@ document.documentElement.dataset.theme = theme;
 el.themeBtn.addEventListener("click", () => {
   theme = theme === "dark" ? "light" : "dark";
   document.documentElement.dataset.theme = theme;
+  save();
 });
 
 // ——— Инициализация ————————————————————————————————————————
 renderDots();
 renderControls();
 renderList();
-load().then(() => { renderDots(); renderControls(); renderList(); });
+load().then(() => {
+  if (state.theme === "light" || state.theme === "dark") {
+    theme = state.theme;
+    document.documentElement.dataset.theme = theme;
+  }
+  renderDots(); renderControls(); renderList();
+});
+
+if (!storageWorks()) {
+  const h = document.querySelector(".library .hint");
+  if (h) h.textContent = "Здесь браузер запрещает сохранение данных: настройки действуют до перезагрузки страницы.";
+}
 
 </script>
 <script>
@@ -1316,6 +1357,21 @@ window.TunerEngine = { GuitarTuner, PitchDetector, TUNINGS, NOTE_NAMES, noteToMi
   let tuner = null;
   let running = false;
 
+  // ——— Сохранение настроек тюнера (localStorage или cookie) ———
+  const TUNER_KEY = "metronome.tuner.v1";
+  function saveTuner() {
+    storeSet(TUNER_KEY, JSON.stringify({ tuning: t.tTuning.value, a4: Number(t.tA4.value) || 440 }));
+  }
+  function loadTuner() {
+    try {
+      const raw = storeGet(TUNER_KEY);
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      if (TUNINGS[d.tuning]) t.tTuning.value = d.tuning;
+      if (d.a4 >= 415 && d.a4 <= 460) t.tA4.value = d.a4;
+    } catch (e) {}
+  }
+
   function ensureTuner() {
     if (!tuner) {
       tuner = new GuitarTuner({
@@ -1434,6 +1490,7 @@ window.TunerEngine = { GuitarTuner, PitchDetector, TUNINGS, NOTE_NAMES, noteToMi
   t.tTuning.addEventListener("change", () => {
     if (tuner) tuner.setTuning(currentTuning());
     renderStrings();
+    saveTuner();
     resetDisplay("Строй изменён — " + t.tTuning.selectedOptions[0].textContent);
   });
 
@@ -1442,8 +1499,10 @@ window.TunerEngine = { GuitarTuner, PitchDetector, TUNINGS, NOTE_NAMES, noteToMi
     t.tA4.value = v;
     if (tuner) tuner.setA4(v);
     renderStrings();
+    saveTuner();
   });
 
+  loadTuner();
   renderStrings();
 })();
 </script>
