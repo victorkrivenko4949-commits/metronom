@@ -388,6 +388,14 @@ button.primary.playing { background: transparent; color: var(--accent); }
           <option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>12</option>
         </select>
       </div>
+      <div class="field" id="randomField">
+        <label class="switch">
+          <input type="checkbox" id="randomBars">
+          <span>Случайные тихие такты</span>
+        </label>
+        <input id="randomChance" type="range" min="10" max="90" step="5" value="50" class="slider slim" style="margin-top: var(--space-3)">
+        <p class="field-note">Метроном случайно замолкает на такт — держите темп сами, а точки на экране проверяют точность. Первый такт всегда звучит.</p>
+      </div>
       <div class="field">
         <label for="volume">Громкость</label>
         <input id="volume" type="range" min="0" max="100" value="80" class="slider slim">
@@ -478,6 +486,8 @@ const state = {
   subdiv: 1,
   beats: 4,
   accents: false,
+  randomBars: false,
+  randomChance: 0.5,
   volume: 0.9,
   playing: false,
   activeId: null,
@@ -532,7 +542,7 @@ function load() {
 function save() {
   storeSet(STORE_KEY, JSON.stringify({
     sections: state.sections,
-    last: { bpm: state.bpm, subdiv: state.subdiv, beats: state.beats, accents: state.accents, volume: state.volume, activeId: state.activeId, theme },
+    last: { bpm: state.bpm, subdiv: state.subdiv, beats: state.beats, accents: state.accents, randomBars: state.randomBars, randomChance: state.randomChance, volume: state.volume, activeId: state.activeId, theme },
   }));
 }
 
@@ -620,14 +630,22 @@ function click(time, kind) {
   src.stop(time + P.dur + 0.02);
 }
 
+let barCount = 0;             // счётчик тактов с начала воспроизведения
+let barSilent = false;        // текущий такт — тихий (случайный режим)
+
 function scheduler() {
   const perStep = 60 / state.bpm / state.subdiv;
-  const beatsInBar = state.accents ? state.beats : 1;
+  const beatsInBar = (state.accents || state.randomBars) ? state.beats : 1;
   while (nextNoteTime < ctx.currentTime + LOOKAHEAD) {
+    if (step === 0) {
+      // жребий в начале каждого такта; первый такт всегда звучит
+      barSilent = state.randomBars && barCount > 0 && Math.random() < state.randomChance;
+      barCount++;
+    }
     const inBeat = step % state.subdiv;
     const beat = Math.floor(step / state.subdiv) % beatsInBar;
     const kind = inBeat !== 0 ? "sub" : (state.accents && beat === 0) ? "accent" : "beat";
-    click(nextNoteTime, kind);
+    if (!barSilent) click(nextNoteTime, kind);
     if (inBeat === 0) flash(beat, nextNoteTime);
     nextNoteTime += perStep;
     step = (step + 1) % (beatsInBar * state.subdiv);
@@ -646,6 +664,8 @@ function flash(beat, time) {
 function start() {
   ensureCtx();
   step = 0;
+  barCount = 0;
+  barSilent = false;
   nextNoteTime = ctx.currentTime + 0.06;
   state.playing = true;
   timerId = setInterval(scheduler, TICK);
@@ -686,12 +706,12 @@ const SUB_LABEL = { 1: "четверти ♩", 2: "восьмые ♪", 3: "тр
 // ——— DOM —————————————————————————————————————————————————————
 const el = {};
 for (const id of ["currentName","beatDots","bpmInput","bpmRange","marking","subdiv","beats","volume",
-  "accents","beatsField","playBtn","tapBtn","saveBtn","list","empty","count","modal","nameInput","modalMeta",
+  "accents","beatsField","randomBars","randomChance","randomField","playBtn","tapBtn","saveBtn","list","empty","count","modal","nameInput","modalMeta",
   "cancelBtn","confirmBtn","themeBtn","metronomeView","tunerView","tabMetronome","tabTuner"]) el[id] = document.getElementById(id);
 
 function renderDots() {
   el.beatDots.innerHTML = "";
-  const n = state.accents ? state.beats : 1;
+  const n = (state.accents || state.randomBars) ? state.beats : 1;
   for (let i = 0; i < n; i++) {
     const d = document.createElement("span");
     d.className = "dot" + (state.accents && i === 0 ? " accent" : "");
@@ -707,8 +727,12 @@ function renderControls() {
   el.beats.value = String(state.beats);
   el.volume.value = Math.round(state.volume * 100);
   el.accents.checked = state.accents;
-  el.beats.disabled = !state.accents;
-  el.beatsField.classList.toggle("off", !state.accents);
+  el.beats.disabled = !(state.accents || state.randomBars);
+  el.beatsField.classList.toggle("off", !(state.accents || state.randomBars));
+  el.randomBars.checked = state.randomBars;
+  el.randomChance.value = Math.round(state.randomChance * 100);
+  el.randomChance.disabled = !state.randomBars;
+  el.randomField.classList.toggle("off", !state.randomBars);
   const active = state.sections.find(s => s.id === state.activeId);
   el.currentName.textContent = active ? active.name : "Без раздела";
 }
@@ -724,7 +748,7 @@ function renderList() {
     const main = document.createElement("button");
     main.type = "button";
     main.className = "item-main";
-    main.innerHTML = `<div class="item-name"></div><div class="item-meta">${s.bpm} BPM · ${SUB_LABEL[s.subdiv]} · ${s.accents ? s.beats + " доли" : "без акцентов"}</div>`;
+    main.innerHTML = `<div class="item-name"></div><div class="item-meta">${s.bpm} BPM · ${SUB_LABEL[s.subdiv]} · ${s.accents ? s.beats + " доли" : "без акцентов"}${s.randomBars ? " · случайные паузы" : ""}</div>`;
     main.querySelector(".item-name").textContent = s.name;
     main.addEventListener("click", () => applySection(s.id));
 
@@ -733,7 +757,7 @@ function renderList() {
     actions.append(
       mini("Переименовать", "M4 20h4l10-10-4-4L4 16v4z", () => openModal(s.id)),
       mini("Обновить текущими настройками", "M4 12a8 8 0 1 1 2.3 5.7M4 12V7m0 5h5", () => {
-        Object.assign(s, { bpm: state.bpm, subdiv: state.subdiv, beats: state.beats, accents: state.accents });
+        Object.assign(s, { bpm: state.bpm, subdiv: state.subdiv, beats: state.beats, accents: state.accents, randomBars: state.randomBars, randomChance: state.randomChance });
         save(); renderList();
       }),
       mini("Удалить", "M6 7h12M9 7V5h6v2M8 7l1 13h6l1-13", () => {
@@ -767,6 +791,8 @@ function applySection(id) {
   state.subdiv = s.subdiv;
   state.beats = s.beats;
   state.accents = !!s.accents;
+  state.randomBars = !!s.randomBars;
+  state.randomChance = typeof s.randomChance === "number" ? s.randomChance : 0.5;
   renderDots();
   renderControls();
   renderList();
@@ -790,8 +816,8 @@ function openModal(id) {
   const s = id ? state.sections.find(x => x.id === id) : null;
   el.nameInput.value = s ? s.name : "";
   el.modalMeta.textContent = s
-    ? `${s.bpm} BPM · ${SUB_LABEL[s.subdiv]} · ${s.accents ? s.beats + " доли" : "без акцентов"}`
-    : `${state.bpm} BPM · ${SUB_LABEL[state.subdiv]} · ${state.accents ? state.beats + " доли" : "без акцентов"}`;
+    ? `${s.bpm} BPM · ${SUB_LABEL[s.subdiv]} · ${s.accents ? s.beats + " доли" : "без акцентов"}${s.randomBars ? " · случайные паузы" : ""}`
+    : `${state.bpm} BPM · ${SUB_LABEL[state.subdiv]} · ${state.accents ? state.beats + " доли" : "без акцентов"}${state.randomBars ? " · случайные паузы" : ""}`;
   el.modal.hidden = false;
   el.nameInput.focus();
 }
@@ -804,7 +830,8 @@ el.confirmBtn.addEventListener("click", () => {
     if (s) s.name = name;
   } else {
     const s = { id: String(Date.now()) + Math.random().toString(16).slice(2, 6), name,
-      bpm: state.bpm, subdiv: state.subdiv, beats: state.beats, accents: state.accents };
+      bpm: state.bpm, subdiv: state.subdiv, beats: state.beats, accents: state.accents,
+      randomBars: state.randomBars, randomChance: state.randomChance };
     state.sections.push(s);
     state.activeId = s.id;
   }
@@ -834,12 +861,25 @@ el.subdiv.addEventListener("change", e => { state.subdiv = Number(e.target.value
 el.beats.addEventListener("change", e => { state.beats = Number(e.target.value); renderDots(); save(); restartIfPlaying(); });
 el.accents.addEventListener("change", e => {
   state.accents = e.target.checked;
-  el.beats.disabled = !state.accents;
-  el.beatsField.classList.toggle("off", !state.accents);
+  el.beats.disabled = !(state.accents || state.randomBars);
+  el.beatsField.classList.toggle("off", !(state.accents || state.randomBars));
   renderDots(); save(); restartIfPlaying();
 });
 
 el.volume.addEventListener("input", e => { setVolume(Number(e.target.value) / 100); save(); });
+
+el.randomBars.addEventListener("change", e => {
+  state.randomBars = e.target.checked;
+  el.randomChance.disabled = !state.randomBars;
+  el.randomField.classList.toggle("off", !state.randomBars);
+  el.beats.disabled = !(state.accents || state.randomBars);
+  el.beatsField.classList.toggle("off", !(state.accents || state.randomBars));
+  renderDots(); save(); restartIfPlaying();
+});
+el.randomChance.addEventListener("input", e => {
+  state.randomChance = Number(e.target.value) / 100;
+  save();
+});
 
 // Тап темпа
 let taps = [];
