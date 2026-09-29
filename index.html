@@ -407,6 +407,17 @@ button.primary.playing { background: transparent; color: var(--accent); }
       <button class="ghost" id="tapBtn" type="button">Тап темпа</button>
       <button class="ghost" id="saveBtn" type="button">Сохранить как раздел</button>
     </div>
+
+    <div class="field" id="roomBox" style="margin-top: var(--space-4)">
+      <label for="roomCode">Совместная игра (комната)</label>
+      <div class="controls" style="margin-top: var(--space-2)">
+        <button class="ghost" id="roomCreate" type="button">Создать комнату</button>
+        <input id="roomCode" type="text" maxlength="5" placeholder="Код" autocomplete="off" style="width:6em;text-transform:uppercase">
+        <button class="ghost" id="roomJoin" type="button">Войти</button>
+        <button class="ghost" id="roomLeave" type="button" hidden>Выйти</button>
+      </div>
+      <p class="field-note" id="roomStatus">Откройте метроном на нескольких устройствах, введите один код — темп и старт будут общими и синхронными.</p>
+    </div>
   </section>
 
   <aside class="panel library" aria-label="Разделы">
@@ -632,6 +643,7 @@ function click(time, kind) {
 
 let barCount = 0;             // счётчик тактов с начала воспроизведения
 let barSilent = false;        // текущий такт — тихий (случайный режим)
+let absBar = 0;               // номер такта от общего старта (для синхронизации)
 
 function scheduler() {
   const perStep = 60 / state.bpm / state.subdiv;
@@ -639,8 +651,9 @@ function scheduler() {
   while (nextNoteTime < ctx.currentTime + LOOKAHEAD) {
     if (step === 0) {
       // жребий в начале каждого такта; первый такт всегда звучит
-      barSilent = state.randomBars && barCount > 0 && Math.random() < state.randomChance;
-      barCount++;
+      const r = room.active ? room.rng(absBar) : Math.random();
+      barSilent = state.randomBars && barCount > 0 && r < state.randomChance;
+      barCount++; absBar++;
     }
     const inBeat = step % state.subdiv;
     const beat = Math.floor(step / state.subdiv) % beatsInBar;
@@ -661,12 +674,24 @@ function flash(beat, time) {
   }, delay);
 }
 
-function start() {
+function start(t0) {
   ensureCtx();
   step = 0;
   barCount = 0;
+  absBar = 0;
   barSilent = false;
   nextNoteTime = ctx.currentTime + 0.06;
+  if (room.active && t0) {
+    // выравнивание по общему времени: все устройства попадают в одну сетку щелчков
+    const perStepMs = 60000 / state.bpm / state.subdiv * 1;
+    const perBar = ((state.accents || state.randomBars) ? state.beats : 1) * state.subdiv;
+    const t0ctx = ctx.currentTime + (t0 - room.now()) / 1000;
+    const k = Math.max(0, Math.ceil((room.now() + 60 - t0) / perStepMs));
+    nextNoteTime = t0ctx + k * perStepMs / 1000;
+    step = k % perBar;
+    absBar = step === 0 ? Math.floor(k / perBar) : Math.floor(k / perBar) + 1;
+    barCount = k === 0 ? 0 : 1;
+  }
   state.playing = true;
   timerId = setInterval(scheduler, TICK);
   el.playBtn.textContent = "Стоп";
@@ -911,6 +936,155 @@ el.themeBtn.addEventListener("click", () => {
   document.documentElement.dataset.theme = theme;
   save();
 });
+
+// ——— Совместная комната (WebRTC через PeerJS, без своего сервера) ———
+const room = {
+  active: false, isHost: false, peer: null, conns: [], hostConn: null, offset: 0, seed: 0, code: "",
+  now() { return Date.now() + this.offset; },
+  rng(n) { // детерминированный «случайный» жребий такта, одинаковый на всех устройствах
+    let x = (Math.imul(this.seed ^ 0x9e3779b9, 2654435761) + Math.imul(n + 1, 40503)) >>> 0;
+    x ^= x >>> 15; x = Math.imul(x, 2246822519) >>> 0; x ^= x >>> 13; x = Math.imul(x, 3266489917) >>> 0; x ^= x >>> 16;
+    return (x >>> 0) / 4294967296;
+  },
+};
+(function () {
+  const $ = id => document.getElementById(id);
+  const status = t => { $("roomStatus").textContent = t; };
+  const PREFIX = "metronom-room-";
+  let lastSig = "", pollId = null, pingId = null, samples = [];
+
+  const snap = () => ({ bpm: state.bpm, subdiv: state.subdiv, beats: state.beats, accents: state.accents,
+    randomBars: state.randomBars, randomChance: state.randomChance, playing: state.playing });
+  const sigOf = o => JSON.stringify([o.bpm, o.subdiv, o.beats, o.accents, o.randomBars, o.randomChance, o.playing]);
+
+  function loadPeerJS() {
+    return new Promise((res, rej) => {
+      if (window.Peer) return res();
+      const sc = document.createElement("script");
+      sc.src = "https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js";
+      sc.onload = res; sc.onerror = () => rej(new Error("Не удалось загрузить PeerJS (нужен интернет)"));
+      document.head.appendChild(sc);
+    });
+  }
+
+  function broadcast(msg, except) {
+    for (const c of room.conns) if (c !== except && c.open) c.send(msg);
+  }
+  function sendState(t0) {
+    const s = snap();
+    const msg = { type: "state", s, t0, seed: room.seed };
+    lastSig = sigOf(s);
+    if (room.isHost) broadcast(msg); else if (room.hostConn?.open) room.hostConn.send(msg);
+  }
+
+  function applyRemote(msg) {
+    const s = msg.s;
+    if (msg.seed) room.seed = msg.seed;
+    setBpm(s.bpm, true);
+    Object.assign(state, { subdiv: s.subdiv, beats: s.beats, accents: s.accents, randomBars: s.randomBars, randomChance: s.randomChance });
+    renderDots(); renderControls();
+    lastSig = sigOf(s);
+    if (state.playing) stop();
+    if (s.playing) start(msg.t0);
+  }
+
+  function onData(conn, msg) {
+    if (!msg) return;
+    if (msg.type === "ping" && room.isHost) conn.send({ type: "pong", t: msg.t, h: Date.now() });
+    else if (msg.type === "pong") {
+      const now = Date.now(), rtt = now - msg.t;
+      samples.push({ rtt, off: msg.h + rtt / 2 - now });
+      if (samples.length > 8) samples.shift();
+      room.offset = samples.reduce((a, b) => b.rtt < a.rtt ? b : a).off;
+    } else if (msg.type === "state") {
+      applyRemote(msg);
+      if (room.isHost) broadcast(msg, conn);
+      updateStatus();
+    }
+  }
+
+  function updateStatus() {
+    if (!room.active) return;
+    status(room.isHost
+      ? `Комната ${room.code}. Устройств подключено: ${room.conns.filter(c => c.open).length + 1}. Скажите код остальным.`
+      : `Вы в комнате ${room.code}. Темп и старт общие.`);
+  }
+
+  function poll() {
+    const s = snap(), sig = sigOf(s);
+    if (sig === lastSig) return;
+    let t0 = 0;
+    if (s.playing) {
+      t0 = room.now() + 250;
+      stop(); start(t0);
+    }
+    sendState(t0);
+  }
+
+  function activate() {
+    room.active = true;
+    $("roomCreate").hidden = $("roomJoin").hidden = $("roomCode").hidden = true;
+    $("roomLeave").hidden = false;
+    lastSig = sigOf(snap());
+    pollId = setInterval(poll, 100);
+  }
+  function leave() {
+    clearInterval(pollId); clearInterval(pingId);
+    try { room.peer?.destroy(); } catch (e) {}
+    Object.assign(room, { active: false, isHost: false, peer: null, conns: [], hostConn: null, offset: 0 });
+    samples = [];
+    $("roomCreate").hidden = $("roomJoin").hidden = $("roomCode").hidden = false;
+    $("roomLeave").hidden = true;
+    status("Вы вышли из комнаты.");
+  }
+
+  $("roomCreate").addEventListener("click", async () => {
+    try {
+      status("Создаю комнату…");
+      await loadPeerJS();
+      const code = Array.from({ length: 5 }, () => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random() * 32)]).join("");
+      const peer = new Peer(PREFIX + code);
+      room.peer = peer; room.isHost = true; room.code = code; room.seed = (Math.random() * 2 ** 31) | 0 || 1;
+      peer.on("open", () => { activate(); updateStatus(); });
+      peer.on("error", e => { status("Ошибка: " + e.type + ". Попробуйте ещё раз."); leave(); });
+      peer.on("connection", conn => {
+        room.conns.push(conn);
+        conn.on("open", () => {
+          const s = snap();
+          conn.send({ type: "state", s, t0: s.playing ? room.now() : 0, seed: room.seed });
+          updateStatus();
+        });
+        conn.on("data", m => onData(conn, m));
+        conn.on("close", () => { room.conns = room.conns.filter(c => c !== conn); updateStatus(); });
+      });
+    } catch (e) { status(e.message); }
+  });
+
+  $("roomJoin").addEventListener("click", async () => {
+    const code = $("roomCode").value.trim().toUpperCase();
+    if (code.length < 5) return status("Введите 5-значный код комнаты.");
+    try {
+      status("Подключаюсь…");
+      await loadPeerJS();
+      const peer = new Peer();
+      room.peer = peer; room.code = code;
+      peer.on("error", e => { status(e.type === "peer-unavailable" ? "Комната с таким кодом не найдена." : "Ошибка: " + e.type); leave(); status("Комната с таким кодом не найдена или нет связи."); });
+      peer.on("open", () => {
+        const conn = peer.connect(PREFIX + code, { reliable: true });
+        room.hostConn = conn;
+        conn.on("open", () => {
+          activate(); updateStatus();
+          const ping = () => conn.open && conn.send({ type: "ping", t: Date.now() });
+          for (let i = 0; i < 6; i++) setTimeout(ping, i * 150);
+          pingId = setInterval(ping, 5000);
+        });
+        conn.on("data", m => onData(conn, m));
+        conn.on("close", () => { leave(); status("Ведущий закрыл комнату."); });
+      });
+    } catch (e) { status(e.message); }
+  });
+  $("roomLeave").addEventListener("click", leave);
+})();
 
 // ——— Инициализация ————————————————————————————————————————
 renderDots();
