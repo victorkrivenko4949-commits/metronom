@@ -250,12 +250,20 @@ button.primary.playing { background: transparent; color: var(--accent); }
 .tabs-wrap {
   display: flex; justify-content: center;
   padding-top: var(--space-8);
+  overflow-x: auto; scrollbar-width: none;
 }
+.tabs-wrap::-webkit-scrollbar { display: none; }
 .tabs {
   display: inline-flex; gap: 4px;
   background: var(--surface-2); border: 1px solid var(--border);
   border-radius: 999px; padding: 4px;
+  max-width: calc(100vw - 32px);
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0 auto;
 }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs .tab { white-space: nowrap; }
 .tab {
   border: 0; background: transparent; border-radius: 999px;
   padding: var(--space-2) var(--space-5);
@@ -371,6 +379,135 @@ kbd { font: inherit; padding: 0 var(--space-1); border: 1px solid var(--border);
   .item { grid-template-columns: minmax(0, 1fr); }
   .item-actions { justify-content: flex-end; }
 }
+
+/* ——— Тренировка ——— */
+#trainingView { grid-template-columns: minmax(0, 1fr); max-width: 800px; }
+.tr-title { margin: 0 0 var(--space-3); font-size: var(--text-xl); letter-spacing: -0.01em; }
+.tr-lead { margin: 0 0 var(--space-5); color: var(--text-muted); font-size: var(--text-sm); }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--space-4); }
+.card { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); padding: var(--space-5); text-align: left; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font: inherit; cursor: pointer; transition: border-color .18s ease, transform .12s ease; }
+.card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.card-icon { color: var(--accent); display: block; }
+.card-icon svg { width: 30px; height: 30px; display: block; }
+.card-title { font-weight: 700; font-size: var(--text-lg); }
+.card-desc { flex: 1; color: var(--text-muted); font-size: var(--text-sm); }
+.card-records { font-size: var(--text-xs); color: var(--text-muted); font-variant-numeric: tabular-nums; display: grid; gap: 2px; }
+.card-records b { color: var(--text); font-weight: 700; }
+
+.tr-drill-head { display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-5); flex-wrap: wrap; }
+.tr-drill-title { margin: 0; font-size: var(--text-lg); }
+
+.tr-intro h3 { margin: 0 0 var(--space-3); font-size: var(--text-xl); letter-spacing: -0.01em; }
+.tr-intro .tr-lead { margin-bottom: var(--space-5); }
+.tr-tut { display: grid; gap: var(--space-4); padding: var(--space-5); border: 1px dashed var(--border); border-radius: var(--radius-sm); margin-bottom: var(--space-6); }
+.tr-tut-row { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+.tr-tut-text { margin: 0; font-size: var(--text-sm); color: var(--text-muted); flex: 1; min-width: 200px; }
+.tr-tut-text b { color: var(--text); }
+.tr-tut-key { width: 28px; height: 28px; flex: 0 0 28px; border-radius: 7px; border: 1px solid var(--border); display: inline-flex; align-items: center; justify-content: center; font-size: var(--text-xs); background: var(--surface-2); }
+.tr-tut-key-ok { background: oklch(0.72 0.17 152); }
+
+.swipe-demo { display: flex; align-items: center; gap: var(--space-2); flex: 1; min-width: 170px; max-width: 250px; }
+.sd-track { position: relative; flex: 1; height: 38px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); }
+.sd-dot { position: absolute; top: 50%; left: 50%; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; background: var(--accent); animation: sdslide 2.6s ease-in-out infinite; }
+@keyframes sdslide { 0%, 100% { transform: translateX(-30px); } 50% { transform: translateX(30px); } }
+.sd-chevron { color: var(--accent); display: grid; place-items: center; }
+.sd-chevron.l { animation: chevL 2.6s ease-in-out infinite; }
+.sd-chevron.r { animation: chevR 2.6s ease-in-out infinite; }
+@keyframes chevL { 0%, 10% { opacity: .35; transform: translateX(3px); } 35% { opacity: 1; transform: translateX(-3px); } 60%, 100% { opacity: .35; } }
+@keyframes chevR { 0%, 10% { opacity: .35; transform: translateX(-3px); } 35% { opacity: 1; transform: translateX(3px); } 60%, 100% { opacity: .35; } }
+
+.tr-levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: var(--space-3); }
+.tr-levels button { display: flex; flex-direction: column; gap: var(--space-1); align-items: flex-start; }
+.tr-level-hint { font-size: var(--text-xs); font-weight: 400; opacity: .85; }
+.tr-recs { margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--border); }
+.tr-rec-line { margin: var(--space-1) 0; font-size: var(--text-xs); color: var(--text-muted); }
+.tr-rec-line b { color: var(--text); }
+.tr-rec-sub { padding-left: var(--space-4); }
+.tr-names-switch { margin-top: var(--space-4); }
+
+.tr-hud { display: flex; flex-wrap: wrap; gap: var(--space-5); justify-content: center; margin-top: var(--space-2); font-variant-numeric: tabular-nums; }
+@media (max-width: 480px) { .tr-hud { display: grid; } }
+.tr-stat { display: flex; flex-direction: column; align-items: center; min-width: 64px; gap: 2px; }
+.tr-stat-label { font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; }
+.tr-stat-value { font-weight: 700; font-size: var(--text-lg); }
+
+.tr-prompt { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; gap: var(--space-2); margin-top: var(--space-5); }
+.tr-nav { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: transparent; color: var(--text-muted); display: grid; place-items: center; cursor: pointer; padding: 0; transition: border-color .18s ease, color .18s ease; }
+.tr-nav:hover { border-color: var(--accent); color: var(--accent); }
+@media (pointer: coarse) {
+  .tr-nav { border-color: transparent; background: transparent; }
+  .tr-nav.left { animation: chevL 2.4s ease-in-out infinite; }
+  .tr-nav.right { animation: chevR 2.4s ease-in-out infinite; }
+}
+
+.tr-prompt-core { min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-4); touch-action: pan-y; cursor: grab; outline-offset: 6px; }
+.tr-prompt-core:active { cursor: grabbing; }
+.tr-staff { width: 100%; max-width: 300px; height: auto; color: var(--text); display: block; }
+.tr-clef path { fill: currentColor; }
+.tr-chip { margin: 0; font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: .12em; }
+.tr-task { margin: 0; font-size: var(--text-sm); color: var(--text); }
+.tr-note-name { margin: 0; font-size: var(--text-lg); font-weight: 900; min-height: 1.5em; }
+.tr-note-name.muted { color: var(--text-muted); font-weight: 400; font-size: var(--text-sm); }
+
+.tr-listen { width: 96px; height: 96px; border-radius: 50%; border: 2px solid var(--accent); background: var(--surface-2); color: var(--accent); display: grid; place-items: center; cursor: pointer; padding: 0; transition: background .18s ease, color .18s ease, transform .12s ease; }
+.tr-listen:hover { background: var(--accent); color: var(--accent-ink); }
+.tr-listen:active { transform: scale(.94); }
+.tr-ear-hint { margin: 0; color: var(--text-muted); font-size: var(--text-sm); }
+
+.tr-feedback { text-align: center; min-height: 1.7em; margin: var(--space-4) 0 0; color: var(--text-muted); font-size: var(--text-sm); }
+.tr-feedback.ok { color: oklch(0.72 0.17 152); font-weight: 700; }
+.tr-feedback.bad { color: oklch(0.68 0.19 25); font-weight: 700; }
+
+.piano-wrap { max-width: 640px; margin: var(--space-5) auto 0; }
+.piano { position: relative; display: flex; gap: 2px; height: clamp(200px, 34vh, 300px); user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+.pkey { border: 1px solid var(--border); border-radius: 0 0 8px 8px; cursor: pointer; padding: 0; font: inherit; position: relative; }
+.pkey.white { flex: 1; background: linear-gradient(oklch(0.96 0.004 85), oklch(0.9 0.006 85)); }
+.pkey.white .pkey-label { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font-size: var(--text-xs); font-weight: 700; color: #565656; line-height: 1.1; }
+.pkey-label small { display: block; font-weight: 400; font-size: 10px; color: #9a9a9a; }
+.pkey.black { position: absolute; top: 0; height: 62%; width: 9.2%; background: linear-gradient(oklch(0.34 0.012 260), oklch(0.21 0.012 260)); border-color: oklch(0.15 0.01 260); border-radius: 0 0 6px 6px; z-index: 2; }
+.pkey.black .pkey-label { position: absolute; left: 0; right: 0; bottom: 7px; text-align: center; font-size: 9.5px; font-weight: 700; color: oklch(0.8 0.01 260); white-space: nowrap; }
+@media (hover: hover) {
+  .pkey.white:hover { box-shadow: inset 0 -5px 0 var(--accent); }
+  .pkey.black:hover { background: linear-gradient(oklch(0.42 0.012 260), oklch(0.3 0.012 260)); }
+}
+.pkey.down { transform: translateY(1px); }
+.pkey.white.down { background: linear-gradient(oklch(0.87 0.008 85), oklch(0.83 0.008 85)); }
+.pkey.black.down { background: linear-gradient(oklch(0.44 0.012 260), oklch(0.32 0.012 260)); }
+.pkey.ok { background: oklch(0.72 0.17 152) !important; }
+.pkey.black.ok { background: oklch(0.58 0.16 152) !important; }
+.pkey.bad { background: oklch(0.62 0.19 25) !important; }
+.pkey.black.bad { background: oklch(0.5 0.18 25) !important; }
+.pkey.ok, .pkey.bad { animation: keyflash .5s ease; }
+@keyframes keyflash { 0% { filter: brightness(1.25); } 100% { filter: brightness(1); } }
+.pkey.hint { box-shadow: 0 0 0 3px var(--accent) !important; animation: keyhint .9s ease-in-out infinite; }
+@keyframes keyhint { 0%, 100% { box-shadow: 0 0 0 3px var(--accent); } 50% { box-shadow: 0 0 0 6px var(--accent); } }
+.phint-arrow { position: absolute; left: 50%; top: -34px; transform: translateX(-50%); color: var(--accent); z-index: 4; pointer-events: none; animation: hintbounce .75s ease-in-out infinite; }
+@keyframes hintbounce { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 7px); } }
+
+.tr-summary { text-align: center; padding-top: var(--space-2); }
+.tr-summary h3 { margin: 0 0 var(--space-2); font-size: var(--text-xl); }
+.tr-results { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: var(--space-3); margin: var(--space-5) 0 var(--space-6); }
+.tr-result { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); padding: var(--space-4); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.tr-result-value { font-size: var(--text-xl); font-weight: 900; font-variant-numeric: tabular-nums; }
+.tr-badge { padding: 2px 10px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-size: var(--text-xs); font-weight: 700; }
+.tr-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: center; }
+
+.tr-melody-list { display: grid; gap: var(--space-2); margin-top: var(--space-4); }
+.tr-melody-btn { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); padding: var(--space-4); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font: inherit; font-weight: 700; cursor: pointer; text-align: left; transition: border-color .18s ease; }
+.tr-melody-btn:hover { border-color: var(--accent); }
+.tr-melody-btn small { font-weight: 400; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 480px) {
+  .tr-prompt { grid-template-columns: 40px minmax(0, 1fr) 40px; }
+  .tr-nav { width: 40px; height: 40px; }
+  .tr-prompt-core { min-height: 170px; }
+  .piano { height: clamp(190px, 32vh, 260px); }
+  .tr-hud { gap: var(--space-4); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-dot, .sd-chevron.l, .sd-chevron.r, .tr-nav.left, .tr-nav.right, .pkey.ok, .pkey.bad, .pkey.hint, .phint-arrow { animation: none !important; }
+}
 </style>
 </head>
 <body>
@@ -392,6 +529,7 @@ kbd { font: inherit; padding: 0 var(--space-1); border: 1px solid var(--border);
   <div class="tabs" role="tablist">
     <button class="tab" id="tabMetronome" role="tab" type="button" aria-selected="true" aria-controls="metronomeView">Метроном</button>
     <button class="tab" id="tabTuner" role="tab" type="button" aria-selected="false" aria-controls="tunerView" tabindex="-1">Тюнер</button>
+    <button class="tab" id="tabTraining" role="tab" type="button" aria-selected="false" aria-controls="trainingView" tabindex="-1">Тренировка</button>
   </div>
 </nav>
 
@@ -539,6 +677,23 @@ kbd { font: inherit; padding: 0 var(--space-1); border: 1px solid var(--border);
     </div>
     <p class="hint" style="margin-top: var(--space-4)">Микрофон работает только по HTTPS или на localhost. Если тюнер молчит — проверьте разрешение на доступ к микрофону в браузере.</p>
   </aside>
+</main>
+
+<main class="layout" id="trainingView" hidden role="tabpanel" aria-labelledby="tabTraining">
+  <section class="panel tr-panel" id="trCards" aria-label="Упражнения">
+    <p class="eyebrow">Тренировка</p>
+    <h2 class="tr-title">Упражнения с рекордами</h2>
+    <p class="tr-lead">Короткие раунды: чтение нот, интервалы и слух. Время, точность и серия сохраняются в этом браузере.</p>
+    <div class="cards" id="trCardList"></div>
+  </section>
+
+  <section class="panel tr-panel" id="trDrill" hidden aria-label="Активное упражнение">
+    <div class="tr-drill-head">
+      <button class="ghost" id="trBack" type="button">← Упражнения</button>
+      <h3 class="tr-drill-title" id="trDrillName"></h3>
+    </div>
+    <div id="trStage"></div>
+  </section>
 </main>
 
 <div class="modal" id="modal" hidden>
@@ -1852,13 +2007,8 @@ window.TunerEngine = { GuitarTuner, PitchDetector, TUNINGS, NOTE_NAMES, noteToMi
   }
   el.tabMetronome.addEventListener("click", () => switchTab("metronome"));
   el.tabTuner.addEventListener("click", () => switchTab("tuner"));
-  document.querySelector(".tabs").addEventListener("keydown", e => {
-    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
-    e.preventDefault();
-    const tuner = e.key === "End" || (e.key !== "Home" && el.tabMetronome.getAttribute("aria-selected") === "true");
-    switchTab(tuner ? "tuner" : "metronome");
-    (tuner ? el.tabTuner : el.tabMetronome).focus();
-  });
+  // Стрелки/Home/End по вкладкам обрабатывает общий перехватчик на .tabs-wrap
+  // (capture-фаза, скрипт «Тренировка») — он же вызывает наш switchTab через клики.
 
   // ——— Настройки ———
   for (const [value, label] of TUNING_LABELS) {
@@ -1967,6 +2117,886 @@ window.TunerEngine = { GuitarTuner, PitchDetector, TUNINGS, NOTE_NAMES, noteToMi
 
   loadTuner();
   renderStrings();
+})();
+</script>
+<script src="melody-data.js" defer></script>
+<script>
+/* ——— Тренировка: карточки упражнений (отработка нот / интервалы / слух) ——— */
+(function () {
+  "use strict";
+
+  // ===== Чистая логика (доступна для автотестов через window.__TR_TEST__) =====
+  var NOTE_RU = ["До", "До♯", "Ре", "Ре♯", "Ми", "Фа", "Фа♯", "Соль", "Соль♯", "Ля", "Ля♯", "Си"];
+  var LATIN = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+  var C4 = 60, B4 = 71;
+
+  function noteName(m) { return NOTE_RU[((m % 12) + 12) % 12]; }
+  function midiFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+  function fmtTime(ms) {
+    var s = Math.max(0, Math.round(ms / 1000));
+    return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  }
+  function noteToMidi4(n) { return C4 + LATIN.indexOf(String(n).replace("♯", "#").slice(0, -1)); }
+
+  // Диатоническая позиция на стане: E4 — нижняя линейка (y=100), шаг 7px
+  var DIA = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6];
+  function staffY(midi) {
+    var pc = ((midi % 12) + 12) % 12;
+    var dia = DIA[pc] + (Math.floor(midi / 12) - 1) * 7;
+    return 100 + (30 - dia) * 7;
+  }
+
+  function filterMelodyNotes(notes) {
+    if (!Array.isArray(notes)) return [];
+    var ok = [];
+    for (var i = 0; i < notes.length; i++) {
+      var n = notes[i];
+      if (typeof n !== "string") continue;
+      n = n.trim().replace("♯", "#");
+      if (/^[A-Ga-g]#?4$/.test(n)) ok.push(n[0].toUpperCase() + n.slice(1));
+    }
+    return ok;
+  }
+
+  // Контракт melody-data.js: window.MelodyData — массив или { melodies: [...] },
+  // каждая мелодия: { id, title, notes: ["C4", "D#4", …] } в основной октаве C4..B4.
+  function normalizeMelodies(raw) {
+    var list = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.melodies) ? raw.melodies : null);
+    if (!list) return [];
+    var out = [];
+    for (var i = 0; i < list.length; i++) {
+      var m = list[i];
+      if (!m || typeof m !== "object") continue;
+      var notes = filterMelodyNotes(m.notes);
+      if (notes.length < 4) continue;
+      out.push({
+        id: String(m.id || m.title || out.length),
+        title: String(m.title || m.id || "Мелодия"),
+        notes: notes,
+      });
+    }
+    return out;
+  }
+
+  function rnd(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+
+  function genNotesRound(n) {
+    var prompts = [], prev = -1, m;
+    for (var i = 0; i < n; i++) {
+      do { m = rnd(C4, B4); } while (m === prev);
+      prev = m;
+      prompts.push({ answer: m });
+    }
+    return prompts;
+  }
+
+  var INTERVALS = [
+    { name: "малая секунта", semi: 1 },
+    { name: "большая секунта", semi: 2 },
+    { name: "малая терция", semi: 3 },
+    { name: "большая терция", semi: 4 },
+    { name: "чистая кварта", semi: 5 },
+    { name: "чистая квинта", semi: 7 },
+    { name: "большая секста", semi: 9 },
+  ];
+  var WHITE_MIDIS = [60, 62, 64, 65, 67, 69, 71];
+
+  function genIntervalsRound(n) {
+    var prompts = [];
+    for (var i = 0; i < n; i++) {
+      var iv = INTERVALS[rnd(0, INTERVALS.length - 1)];
+      var bases = WHITE_MIDIS.filter(function (b) { return b + iv.semi <= B4; });
+      var base = bases[rnd(0, bases.length - 1)];
+      prompts.push({ answer: base + iv.semi, base: base, iv: iv });
+    }
+    return prompts;
+  }
+  function genEarRound(n) { return genNotesRound(n); }
+
+  function mergeRecord(prev, stats) {
+    var p = prev || null;
+    var isNewTime = !p || stats.timeMs < p.bestTimeMs;
+    var isNewAcc = !p || stats.acc > p.bestAcc;
+    var isNewStreak = !p || stats.bestStreak > p.bestStreak;
+    return {
+      isNewTime: isNewTime, isNewAcc: isNewAcc, isNewStreak: isNewStreak,
+      next: {
+        bestTimeMs: isNewTime ? stats.timeMs : p.bestTimeMs,
+        bestAcc: isNewAcc ? stats.acc : p.bestAcc,
+        bestStreak: isNewStreak ? stats.bestStreak : p.bestStreak,
+      },
+    };
+  }
+
+  // Скрипичный ключ + нотный стан (SVG-строка)
+  // Скрипичный ключ: контур из Treble clef.svg (Wikimedia Commons, public domain)
+  var CLEF = "<g class=\"tr-clef\" transform=\"matrix(0.023717,0,0,0.023717,-7.145,-93.275)\"><path d=\"M 2002,7851 C 1941,7868 1886,7906 1835,7964 C 1784,8023 1759,8088 1759,8158 C 1759,8202 1774,8252 1803,8305 C 1832,8359 1876,8398 1933,8423 C 1952,8427 1961,8437 1961,8451 C 1961,8456 1954,8461 1937,8465 C 1846,8442 1771,8393 1713,8320 C 1655,8246 1625,8162 1623,8066 C 1626,7963 1657,7867 1716,7779 C 1776,7690 1853,7627 1947,7590 L 1878,7235 C 1724,7363 1599,7496 1502,7636 C 1405,7775 1355,7926 1351,8089 C 1353,8162 1368,8233 1396,8301 C 1424,8370 1466,8432 1522,8489 C 1635,8602 1782,8661 1961,8667 C 2022,8663 2087,8652 2157,8634 L 2002,7851 z M 2074,7841 L 2230,8610 C 2384,8548 2461,8413 2461,8207 C 2452,8138 2432,8076 2398,8021 C 2365,7965 2321,7921 2265,7889 C 2209,7857 2146,7841 2074,7841 z M 1869,6801 C 1902,6781 1940,6746 1981,6697 C 2022,6649 2062,6592 2100,6528 C 2139,6463 2170,6397 2193,6330 C 2216,6264 2227,6201 2227,6143 C 2227,6118 2225,6093 2220,6071 C 2216,6035 2205,6007 2186,5988 C 2167,5970 2143,5960 2113,5960 C 2053,5960 1999,5997 1951,6071 C 1914,6135 1883,6211 1861,6297 C 1838,6384 1825,6470 1823,6557 C 1828,6656 1844,6737 1869,6801 z M 1806,6859 C 1761,6697 1736,6532 1731,6364 C 1732,6256 1743,6155 1764,6061 C 1784,5967 1813,5886 1851,5816 C 1888,5746 1931,5693 1979,5657 C 2022,5625 2053,5608 2070,5608 C 2083,5608 2094,5613 2104,5622 C 2114,5631 2127,5646 2143,5666 C 2262,5835 2322,6039 2322,6277 C 2322,6390 2307,6500 2277,6610 C 2248,6719 2205,6823 2148,6920 C 2090,7018 2022,7103 1943,7176 L 2024,7570 C 2068,7565 2098,7561 2115,7561 C 2191,7561 2259,7577 2322,7609 C 2385,7641 2439,7684 2483,7739 C 2527,7793 2561,7855 2585,7925 C 2608,7995 2621,8068 2621,8144 C 2621,8262 2590,8370 2528,8467 C 2466,8564 2373,8635 2248,8681 C 2256,8730 2270,8801 2291,8892 C 2311,8984 2326,9057 2336,9111 C 2346,9165 2350,9217 2350,9268 C 2350,9347 2331,9417 2293,9479 C 2254,9541 2202,9589 2136,9623 C 2071,9657 1999,9674 1921,9674 C 1811,9674 1715,9643 1633,9582 C 1551,9520 1507,9437 1503,9331 C 1506,9284 1517,9240 1537,9198 C 1557,9156 1584,9122 1619,9096 C 1653,9069 1694,9055 1741,9052 C 1780,9052 1817,9063 1852,9084 C 1886,9106 1914,9135 1935,9172 C 1955,9209 1966,9250 1966,9294 C 1966,9353 1946,9403 1906,9444 C 1866,9485 1815,9506 1754,9506 L 1731,9506 C 1770,9566 1834,9597 1923,9597 C 1968,9597 2014,9587 2060,9569 C 2107,9550 2146,9525 2179,9493 C 2212,9461 2234,9427 2243,9391 C 2260,9350 2268,9293 2268,9222 C 2268,9174 2263,9126 2254,9078 C 2245,9031 2231,8968 2212,8890 C 2193,8813 2179,8753 2171,8712 C 2111,8727 2049,8735 1984,8735 C 1875,8735 1772,8713 1675,8668 C 1578,8623 1493,8561 1419,8481 C 1346,8401 1289,8311 1248,8209 C 1208,8108 1187,8002 1186,7892 C 1190,7790 1209,7692 1245,7600 C 1281,7507 1327,7419 1384,7337 C 1441,7255 1500,7180 1561,7113 C 1623,7047 1704,6962 1806,6859 z\"/></g>";
+
+  function staffSVG(midi) {
+    var y = staffY(midi);
+    var lines = [44, 58, 72, 86, 100].map(function (v) {
+      return '<line x1="12" x2="248" y1="' + v + '" y2="' + v + '"/>';
+    }).join("");
+    var ledger = midi === 60 ? '<line x1="76" x2="108" y1="' + y + '" y2="' + y + '"/>' : "";
+    var stem = '<line x1="100" y1="' + (y - 5) + '" x2="100" y2="' + (y - 50) + '"/>';
+    return '<svg class="tr-staff" viewBox="0 0 260 148" aria-hidden="true">' +
+      '<g stroke="currentColor" stroke-width="1.6" fill="none">' + lines + ledger + stem + '</g>' +
+      '<ellipse cx="92" cy="' + y + '" rx="9.5" ry="7" fill="currentColor"/>' +
+      CLEF + '</svg>';
+  }
+
+  // ——— Чистая логика раунда: каждое задание учитывается ровно один раз ———
+  // p.counted — задание уже в зачёте (ответ или пропуск), p.firstTry — ошибок на нём ещё не было.
+  // Пропущенное вперёд задание засчитывается без верного ответа; возврат к сыгранному —
+  // только повтор для практики, статистика и рекорды не меняются.
+  function makeRoundState(prompts) {
+    return {
+      idx: 0, correct: 0, done: 0, streak: 0, bestStreak: 0,
+      prompts: prompts.map(function (p) {
+        p.counted = false; p.firstTry = true; p.answered = false;
+        return p;
+      }),
+    };
+  }
+  // Возвращает { type: "ok" | "repeat-ok" | "bad", advance: boolean }
+  function roundAnswer(st, midi) {
+    var p = st.prompts[st.idx];
+    if (!p) return { type: "bad", advance: false };
+    if (midi !== p.answer) {
+      if (!p.counted) { p.firstTry = false; st.streak = 0; }
+      return { type: "bad", advance: false };
+    }
+    if (p.counted) { st.idx++; return { type: "repeat-ok", advance: true }; } // повтор
+    if (p.firstTry) {
+      st.correct++;
+      st.streak++;
+      if (st.streak > st.bestStreak) st.bestStreak = st.streak;
+    }
+    p.counted = true; p.answered = true; st.done++;
+    st.idx++;
+    return { type: "ok", advance: true };
+  }
+  // Пропуск вперёд учитывает задание один раз (как ошибку: без верного ответа и серия прерывается);
+  // назад — просто навигация
+  function roundNav(st, dir) {
+    var nextIdx = st.idx + dir;
+    if (nextIdx < 0 || nextIdx >= st.prompts.length) return false;
+    var p = st.prompts[st.idx];
+    if (dir > 0 && !p.counted) { p.counted = true; st.done++; st.streak = 0; }
+    st.idx = nextIdx;
+    return true;
+  }
+  function roundAcc(st) { return st.done ? st.correct / st.done : 0; }
+
+  // ——— Ключи рекордов: для мелодий — отдельно на каждую (notes.melody.<id>) ———
+  function recordKey(drillId, levelId, melody) {
+    return drillId + "." + ((levelId === "melody" && melody && melody.id) ? "melody." + melody.id : levelId);
+  }
+  function melodyRecordList(records) {
+    var out = [];
+    if (records) Object.keys(records).forEach(function (k) {
+      if (k.indexOf("notes.melody.") === 0) {
+        out.push({ id: k.slice("notes.melody.".length), title: (records[k] && records[k].title) || null, rec: records[k] });
+      }
+    });
+    return out;
+  }
+  function bestAcrossMelodies(records) {
+    var list = melodyRecordList(records);
+    var best = null;
+    list.forEach(function (m) {
+      best = mergeRecord(best, { timeMs: m.rec.bestTimeMs, acc: m.rec.bestAcc, bestStreak: m.rec.bestStreak }).next;
+    });
+    return list.length ? best : null;
+  }
+  function topMelodyRecords(records, n) {
+    var list = melodyRecordList(records).map(function (m) {
+      return { id: m.id, title: m.title || m.id, rec: m.rec };
+    });
+    list.sort(function (a, b) {
+      var d = (b.rec.bestAcc || 0) - (a.rec.bestAcc || 0);
+      return d !== 0 ? d : (a.rec.bestTimeMs || Infinity) - (b.rec.bestTimeMs || Infinity);
+    });
+    return list.slice(0, n || 3);
+  }
+
+  var __TR_API__ = {
+    noteName: noteName, midiFreq: midiFreq, fmtTime: fmtTime, noteToMidi4: noteToMidi4,
+    staffY: staffY, staffSVG: staffSVG, filterMelodyNotes: filterMelodyNotes,
+    normalizeMelodies: normalizeMelodies, genNotesRound: genNotesRound,
+    genIntervalsRound: genIntervalsRound, genEarRound: genEarRound,
+    INTERVALS: INTERVALS, mergeRecord: mergeRecord,
+    makeRoundState: makeRoundState, roundAnswer: roundAnswer, roundNav: roundNav, roundAcc: roundAcc,
+    recordKey: recordKey, melodyRecordList: melodyRecordList,
+    bestAcrossMelodies: bestAcrossMelodies, topMelodyRecords: topMelodyRecords,
+  };
+  if (typeof window !== "undefined") window.__TR_TEST__ = __TR_API__;
+
+  // ===== Дальше — только DOM-интеграция =====
+  if (typeof document === "undefined" || !document.getElementById("trainingView")) return;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var tabTr = $("tabTraining"), viewTr = $("trainingView");
+  var tabM = $("tabMetronome"), tabT = $("tabTuner");
+  var TABS = [tabM, tabTr, tabT]; // порядок как на экране
+  var cardsEl = $("trCards"), drillEl = $("trDrill"), stage = $("trStage");
+  var activeCardBtn = null;
+  var round = null;
+  var pianoKeys = {};
+
+  // ——— Вкладка ———
+  function setTrainingTab(on) {
+    viewTr.hidden = !on;
+    tabTr.setAttribute("aria-selected", String(on));
+    tabTr.tabIndex = on ? 0 : -1;
+    if (on) {
+      $("metronomeView").hidden = true;
+      $("tunerView").hidden = true;
+      tabM.setAttribute("aria-selected", "false"); tabM.tabIndex = -1;
+      tabT.setAttribute("aria-selected", "false"); tabT.tabIndex = -1;
+      try { if (state.playing) stop(); } catch (e) {} // метроном тоже глушим
+      var tBtn = $("tStartBtn"); // останавливаем тюнер, освобождаем микрофон
+      if (tBtn && tBtn.classList.contains("playing")) tBtn.click();
+    }
+  }
+  tabTr.addEventListener("click", function () { stopTempoHold(); setTrainingTab(true); });
+  tabM.addEventListener("click", function () { setTrainingTab(false); });
+  tabT.addEventListener("click", function () { setTrainingTab(false); });
+
+  // Клавиши ← → Home End по всем трём вкладкам (замещает обработку двух вкладок).
+  // Capture-фаза на .tabs-wrap срабатывает раньше прежнего обработчика на .tabs.
+  document.querySelector(".tabs-wrap").addEventListener("keydown", function (e) {
+    if (["ArrowLeft", "ArrowRight", "Home", "End"].indexOf(e.key) === -1) return;
+    if (!e.target.closest || !e.target.closest(".tab")) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var cur = TABS.findIndex(function (t) { return t.getAttribute("aria-selected") === "true"; });
+    var idx;
+    if (e.key === "Home") idx = 0;
+    else if (e.key === "End") idx = TABS.length - 1;
+    else idx = (cur + (e.key === "ArrowRight" ? 1 : -1) + TABS.length) % TABS.length;
+    var target = TABS[idx];
+    if (target === tabTr) setTrainingTab(true);
+    else { setTrainingTab(false); target.click(); }
+    target.focus();
+  }, true);
+
+  // ——— Хранилище рекордов (storeGet/storeSet + cookie-фолбэк из основного скрипта) ———
+  var TR_KEY = "metronome.training.v1";
+  function trLoad() {
+    try {
+      var d = JSON.parse(storeGet(TR_KEY));
+      return d && typeof d === "object" ? d : {};
+    } catch (e) { return {}; }
+  }
+  function trSave(d) { try { storeSet(TR_KEY, JSON.stringify(d)); } catch (e) {} }
+  function getRecord(key) {
+    var d = trLoad();
+    return (d.records && d.records[key]) || null;
+  }
+  function saveRecord(key, stats, title) {
+    var d = trLoad();
+    if (!d.records) d.records = {};
+    var res = mergeRecord(d.records[key], stats);
+    if (title && res.next) res.next.title = title; // подпись мелодии для списка рекордов
+    d.records[key] = res.next;
+    trSave(d);
+    return res;
+  }
+  function getSetting(name, def) {
+    var d = trLoad();
+    return d.settings && name in d.settings ? d.settings[name] : def;
+  }
+  function setSetting(name, val) {
+    var d = trLoad();
+    d.settings = d.settings || {};
+    d.settings[name] = val;
+    trSave(d);
+  }
+
+  // ——— Звук ноты (отдельный узел, не зависит от громкости метронома) ———
+  function playTone(midi) {
+    try {
+      ensureCtx();
+      if (!ctx || ctx.state !== "running") return;
+      var t = ctx.currentTime;
+      var f = midiFreq(midi);
+      var g = ctx.createGain();
+      g.connect(ctx.destination);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.2, t + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+      var o1 = ctx.createOscillator();
+      o1.type = "triangle"; o1.frequency.value = f;
+      var o2 = ctx.createOscillator();
+      o2.type = "sine"; o2.frequency.value = f * 2;
+      var g2 = ctx.createGain(); g2.gain.value = 0.3;
+      o1.connect(g); o2.connect(g2).connect(g);
+      o1.start(t); o2.start(t);
+      o1.stop(t + 0.95); o2.stop(t + 0.95);
+    } catch (e) {}
+  }
+
+  // ——— Мелодии: window.MelodyData (melody-data.js), иначе встроенный набор ———
+  var BUILTIN_MELODIES = [
+    { id: "builtin-jacques", title: "Братец Яков (французская народная)", notes: "C4 D4 E4 C4 C4 D4 E4 C4 E4 F4 G4 E4 F4 G4 G4 A4 G4 F4 E4 C4 G4 A4 G4 F4 E4 C4 C4 G4 C4 C4 G4 C4".split(" ") },
+    { id: "builtin-ode", title: "Ода к радости (Л. ван Бетховен)", notes: "E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 E4 D4 D4".split(" ") },
+    { id: "builtin-star", title: "Маленькая звезда (французская народная)", notes: "C4 C4 G4 G4 A4 A4 G4 F4 F4 E4 E4 D4 D4 C4".split(" ") },
+  ];
+  var melodyScriptTried = false;
+  function getMelodies() {
+    var direct = normalizeMelodies(window.MelodyData);
+    if (direct.length) return Promise.resolve(direct);
+    if (!melodyScriptTried) {
+      melodyScriptTried = true;
+      return new Promise(function (resolve) {
+        var settled = false;
+        var finish = function (list) { if (!settled) { settled = true; resolve(list); } };
+        var s = document.createElement("script");
+        s.src = "melody-data.js";
+        s.onload = function () {
+          var list = normalizeMelodies(window.MelodyData);
+          finish(list.length ? list : BUILTIN_MELODIES);
+        };
+        s.onerror = function () { finish(BUILTIN_MELODIES); }; // файл недоступен — сразу встроенный набор
+        document.head.appendChild(s);
+        var n = 0;
+        var check = function () {
+          var list = normalizeMelodies(window.MelodyData);
+          if (list.length) finish(list);
+          else if (n > 12) finish(BUILTIN_MELODIES);
+          else { n++; setTimeout(check, 250); }
+        };
+        check();
+      });
+    }
+    return new Promise(function (resolve) {
+      setTimeout(function () {
+        var list = normalizeMelodies(window.MelodyData);
+        resolve(list.length ? list : BUILTIN_MELODIES);
+      }, 400);
+    });
+  }
+
+  // ——— Иконки карточек ———
+  var ICONS = {
+    notes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17.5V5.5l9-2v11.5"/><circle cx="6.2" cy="17.5" r="2.6"/><circle cx="15.2" cy="15" r="2.6"/></svg>',
+    intervals: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5.5 19.5l13-15"/><circle cx="5.5" cy="19.5" r="2.4"/><circle cx="18.5" cy="4.5" r="2.4"/></svg>',
+    ear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4h3.5l4.5 4V6l-4.5 4H4z"/><path d="M15.5 9.5a3.6 3.6 0 0 1 0 5"/><path d="M17.8 7a6.8 6.8 0 0 1 0 10"/></svg>',
+  };
+  var CHEV_L = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>';
+  var CHEV_R = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>';
+  var CHEV_D = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l7 7 7-7"/></svg>';
+
+  var DRILLS = {
+    notes: {
+      title: "Отработка нот",
+      desc: "На стане появляется нота — сыграйте её на клавиатуре. Ошиблись — верная клавиша подсветится, а над ней появится стрелка. Уровни: случайные ноты и целые мелодии.",
+      levels: [
+        { id: "notes", label: "Случайные ноты", hint: "12 нот за раунд — на скорость и точность" },
+        { id: "melody", label: "Мелодии", hint: "Знакомые мелодии по нотам, от начала до конца" },
+      ],
+    },
+    intervals: {
+      title: "Интервалы",
+      desc: "Дана нота и интервал — сыграйте вторую ноту выше заданной. Тренирует чувство расстояний между нотами.",
+      levels: [{ id: "l1", label: "Все интервалы", hint: "10 интервалов за раунд" }],
+    },
+    ear: {
+      title: "Слуховая проверка",
+      desc: "Приложение проигрывает ноту — найдите её на клавиатуре на слух. Без нот и подсказок, только ухо.",
+      levels: [{ id: "l1", label: "Найди ноту", hint: "12 нот за раунд" }],
+    },
+  };
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return "&#" + c.charCodeAt(0) + ";";
+    });
+  }
+
+  // ——— Карточки ———
+  function renderCards() {
+    drillEl.hidden = true;
+    cardsEl.hidden = false;
+    var list = $("trCardList");
+    list.innerHTML = "";
+    Object.keys(DRILLS).forEach(function (id) {
+      var d = DRILLS[id];
+      var card = document.createElement("button");
+      card.type = "button";
+      card.className = "card";
+      var recLines = d.levels.map(function (l) {
+        var r = (id === "notes" && l.id === "melody")
+          ? bestAcrossMelodies(trLoad().records)
+          : getRecord(id + "." + l.id);
+        return "<span>" + l.label + ": " + (r
+          ? "<b>" + fmtTime(r.bestTimeMs) + "</b> · <b>" + Math.round(r.bestAcc * 100) + "%</b> · серия <b>" + r.bestStreak + "</b>"
+          : "рекорда нет") + "</span>";
+      }).join("");
+      card.innerHTML =
+        '<span class="card-icon">' + ICONS[id] + "</span>" +
+        '<span class="card-title">' + d.title + "</span>" +
+        '<span class="card-desc">' + d.desc + "</span>" +
+        '<span class="card-records">' + recLines + "</span>";
+      card.addEventListener("click", function () { activeCardBtn = card; openDrill(id); });
+      list.appendChild(card);
+    });
+  }
+
+  function openDrill(id) {
+    cardsEl.hidden = true;
+    drillEl.hidden = false;
+    $("trDrillName").textContent = DRILLS[id].title;
+    renderIntro(id);
+    $("trBack").focus();
+  }
+  function closeDrill() {
+    endRoundIfAny();
+    renderCards();
+    if (activeCardBtn) activeCardBtn.focus();
+  }
+  $("trBack").addEventListener("click", closeDrill);
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    if (viewTr.hidden || drillEl.hidden) return;
+    if (!$("modal").hidden) return;
+    closeDrill();
+  });
+
+  // ——— Стартовый экран упражнения ———
+  function swipeDemoHTML() {
+    return '<div class="swipe-demo" aria-hidden="true">' +
+      '<span class="sd-chevron l">' + CHEV_L + "</span>" +
+      '<span class="sd-track"><span class="sd-dot"></span></span>' +
+      '<span class="sd-chevron r">' + CHEV_R + "</span></div>";
+  }
+  function recordsHTML(id) {
+    return DRILLS[id].levels.map(function (l) {
+      if (id === "notes" && l.id === "melody") {
+        var recs = trLoad().records;
+        var best = bestAcrossMelodies(recs);
+        var out = '<p class="tr-rec-line"><span>Мелодии:</span> ' + (best
+          ? "лучший результат <b>" + fmtTime(best.bestTimeMs) + "</b>, точность <b>" + Math.round(best.bestAcc * 100) + "%</b>, серия <b>" + best.bestStreak + "</b>"
+          : "рекордов пока нет") + "</p>";
+        topMelodyRecords(recs, 3).forEach(function (m) {
+          out += '<p class="tr-rec-line tr-rec-sub">' + esc(m.title) + ": <b>" + Math.round(m.rec.bestAcc * 100) + "%</b> · " + fmtTime(m.rec.bestTimeMs) + "</p>";
+        });
+        return out;
+      }
+      var r = getRecord(id + "." + l.id);
+      return '<p class="tr-rec-line"><span>' + l.label + ":</span> " + (r
+        ? 'лучшее время <b>' + fmtTime(r.bestTimeMs) + "</b>, точность <b>" + Math.round(r.bestAcc * 100) + "%</b>, серия <b>" + r.bestStreak + "</b>"
+        : "рекордов пока нет") + "</p>";
+    }).join("");
+  }
+
+  function renderIntro(id) {
+    var d = DRILLS[id];
+    stage.innerHTML =
+      '<div class="tr-intro">' +
+      '<p class="tr-lead">' + d.desc + "</p>" +
+      '<div class="tr-tut">' +
+      '<div class="tr-tut-row">' + swipeDemoHTML() +
+      '<p class="tr-tut-text">Задания можно листать: <b>свайпом</b> по карточке на телефоне или клавишами <kbd>←</kbd> <kbd>→</kbd> на компьютере.</p></div>' +
+      '<div class="tr-tut-row"><span class="tr-tut-key tr-tut-key-ok" aria-hidden="true"></span>' +
+      '<p class="tr-tut-text">Верная клавиша вспыхивает <b>зелёным</b>, ошибка — <b>красным</b>: тогда нужная клавиша подсветится, а над ней появится стрелка.</p></div>' +
+      (id === "notes"
+        ? '<div class="tr-tut-row"><span class="tr-tut-key" aria-hidden="true"><kbd>A</kbd></span>' +
+          '<p class="tr-tut-text">На компьютере ноты можно играть клавишами <kbd>A</kbd> <kbd>W</kbd> <kbd>S</kbd> <kbd>E</kbd> <kbd>D</kbd> <kbd>F</kbd> <kbd>T</kbd> <kbd>G</kbd> <kbd>Y</kbd> <kbd>H</kbd> <kbd>U</kbd> <kbd>J</kbd>.</p></div>'
+        : "") +
+      "</div>" +
+      '<div class="tr-levels"></div>' +
+      '<div class="tr-recs">' + recordsHTML(id) + "</div>" +
+      "</div>";
+    var levels = stage.querySelector(".tr-levels");
+    d.levels.forEach(function (lv) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "primary";
+      b.innerHTML = '<span class="tr-level-name">' + lv.label + '</span><span class="tr-level-hint">' + lv.hint + "</span>";
+      b.addEventListener("click", function () {
+        if (id === "notes" && lv.id === "melody") renderMelodyPicker();
+        else startRound(id, lv.id, null);
+      });
+      levels.appendChild(b);
+    });
+    if (id === "notes") {
+      var label = document.createElement("label");
+      label.className = "switch tr-names-switch";
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = getSetting("showNames", false);
+      cb.addEventListener("change", function () { setSetting("showNames", cb.checked); });
+      var sp = document.createElement("span");
+      sp.textContent = "Показывать название ноты (для начинающих)";
+      label.append(cb, sp);
+      stage.querySelector(".tr-intro").appendChild(label);
+    }
+  }
+
+  function pluralNotes(n) {
+    var n10 = n % 10, n100 = n % 100;
+    if (n10 === 1 && n100 !== 11) return n + " нота";
+    if (n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14)) return n + " ноты";
+    return n + " нот";
+  }
+
+  function renderMelodyPicker() {
+    stage.innerHTML =
+      '<div class="tr-intro"><h3>Выберите мелодию</h3>' +
+      '<p class="tr-lead">Играйте мелодию по нотам: каждая нота появляется на стане.</p>' +
+      '<div class="tr-melody-list">Загружаю список мелодий…</div></div>';
+    getMelodies().then(function (list) {
+      var box = stage.querySelector(".tr-melody-list");
+      if (!box) return;
+      box.innerHTML = "";
+      if (!list.length) { box.textContent = "Мелодии недоступны."; return; }
+      list.forEach(function (m) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "tr-melody-btn";
+        var name = document.createElement("span");
+        name.textContent = m.title;
+        var meta = document.createElement("small");
+        var mrec = getRecord(recordKey("notes", "melody", m));
+        meta.textContent = pluralNotes(m.notes.length) + (mrec
+          ? " · рекорд " + Math.round(mrec.bestAcc * 100) + "% за " + fmtTime(mrec.bestTimeMs)
+          : "");
+        b.append(name, meta);
+        b.addEventListener("click", function () { startRound("notes", "melody", m); });
+        box.appendChild(b);
+      });
+    });
+  }
+
+  // ——— Клавиатура-пианино ———
+  var BLACKS = { 61: 1, 63: 2, 66: 4, 68: 5, 70: 6 };
+  function createPiano(root) {
+    pianoKeys = {};
+    root.innerHTML = "";
+    function mk(midi, cls) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "pkey " + cls;
+      b.dataset.midi = midi;
+      b.setAttribute("aria-label", noteName(midi) + " — 4-я октава");
+      var label = document.createElement("span");
+      label.className = "pkey-label";
+      label.textContent = noteName(midi);
+      b.appendChild(label);
+      pianoKeys[midi] = b;
+      return b;
+    }
+    WHITE_MIDIS.forEach(function (m) { root.appendChild(mk(m, "white")); });
+    Object.keys(BLACKS).forEach(function (m) {
+      var b = mk(Number(m), "black");
+      b.style.left = "calc(" + (BLACKS[m] * 100 / 7) + "% - 4.6%)";
+      root.appendChild(b);
+    });
+    root.addEventListener("pointerdown", function (e) {
+      var key = e.target.closest(".pkey");
+      if (!key || (e.pointerType === "mouse" && e.button !== 0)) return;
+      e.preventDefault();
+      pressKey(Number(key.dataset.midi));
+    });
+    root.addEventListener("click", function (e) {
+      if (e.detail > 0) return; // уже обработано pointerdown
+      var key = e.target.closest(".pkey");
+      if (key) pressKey(Number(key.dataset.midi));
+    });
+  }
+
+  function pressKey(midi) {
+    var key = pianoKeys[midi];
+    if (key) {
+      key.classList.add("down");
+      setTimeout(function () { key.classList.remove("down"); }, 140);
+    }
+    playTone(midi);
+    handleAnswer(midi);
+  }
+
+  function pianoFlash(midi, cls) {
+    var key = pianoKeys[midi];
+    if (!key) return;
+    key.classList.remove("ok", "bad");
+    void key.offsetWidth; // перезапуск анимации
+    key.classList.add(cls);
+    setTimeout(function () { key.classList.remove(cls); }, 520);
+  }
+  function pianoHint(midi) {
+    var key = pianoKeys[midi];
+    if (!key) return;
+    if (!key.querySelector(".phint-arrow")) {
+      var a = document.createElement("span");
+      a.className = "phint-arrow";
+      a.innerHTML = CHEV_D;
+      key.appendChild(a);
+    }
+    key.classList.add("hint");
+  }
+  function clearHints() {
+    Object.keys(pianoKeys).forEach(function (m) {
+      var k = pianoKeys[m];
+      k.classList.remove("hint");
+      var a = k.querySelector(".phint-arrow");
+      if (a) a.remove();
+    });
+  }
+
+  // ——— Раунд ———
+  function startRound(drillId, levelId, melody) {
+    // Полный фокус на упражнении: глушим метроном и тюнер
+    try { if (state.playing) stop(); } catch (e) {}
+    var tBtn = $("tStartBtn");
+    if (tBtn && tBtn.classList.contains("playing")) tBtn.click();
+
+    var prompts;
+    if (drillId === "notes") {
+      prompts = melody
+        ? melody.notes.map(function (n) { return { answer: noteToMidi4(n) }; })
+        : genNotesRound(12);
+    } else if (drillId === "intervals") prompts = genIntervalsRound(10);
+    else prompts = genEarRound(12);
+
+    round = makeRoundState(prompts); // состояние зачёта: задания считаются один раз
+    round.drillId = drillId; round.levelId = levelId; round.melody = melody;
+    round.revealName = false;
+    round.startedAt = null; round.finishedAt = null; round.timerId = null;
+    round.ui = null;
+    renderPlayScreen();
+  }
+
+  function endRoundIfAny() {
+    if (round && round.timerId) clearInterval(round.timerId);
+    round = null;
+  }
+
+  function startHint(drillId) {
+    if (drillId === "notes") return "Нажмите на клавиатуре ноту со стана";
+    if (drillId === "intervals") return "Сыграйте интервал от показанной ноты";
+    return "Прослушайте ноту и найдите её на клавиатуре";
+  }
+
+  function renderPlayScreen() {
+    var r = round;
+    stage.innerHTML =
+      '<div class="tr-play">' +
+      '<div class="tr-hud" role="group" aria-label="Статистика раунда">' +
+      '<span class="tr-stat"><span class="tr-stat-label">Время</span><span class="tr-stat-value" data-role="timer">0:00</span></span>' +
+      '<span class="tr-stat"><span class="tr-stat-label">Задание</span><span class="tr-stat-value" data-role="progress"></span></span>' +
+      '<span class="tr-stat"><span class="tr-stat-label">Серия</span><span class="tr-stat-value" data-role="streak">0</span></span>' +
+      '<span class="tr-stat"><span class="tr-stat-label">Точность</span><span class="tr-stat-value" data-role="acc">—</span></span>' +
+      "</div>" +
+      '<div class="tr-prompt">' +
+      '<button type="button" class="tr-nav left" data-role="prev" aria-label="Предыдущее задание">' + CHEV_L + "</button>" +
+      '<div class="tr-prompt-core" data-role="core" tabindex="-1" role="group"></div>' +
+      '<button type="button" class="tr-nav right" data-role="next" aria-label="Следующее задание">' + CHEV_R + "</button>" +
+      "</div>" +
+      '<p class="tr-feedback" data-role="feedback" aria-live="polite">' + startHint(r.drillId) + "</p>" +
+      '<div class="piano-wrap"><div class="piano" data-role="piano"></div></div>' +
+      "</div>";
+    var q = function (sel) { return stage.querySelector(sel); };
+    r.ui = {
+      timer: q('[data-role="timer"]'),
+      progress: q('[data-role="progress"]'),
+      streak: q('[data-role="streak"]'),
+      acc: q('[data-role="acc"]'),
+      core: q('[data-role="core"]'),
+      feedback: q('[data-role="feedback"]'),
+      prev: q('[data-role="prev"]'),
+      next: q('[data-role="next"]'),
+    };
+    createPiano(q('[data-role="piano"]'));
+    r.ui.prev.addEventListener("click", function () { navPrompt(-1); });
+    r.ui.next.addEventListener("click", function () { navPrompt(1); });
+    bindSwipe(r.ui.core);
+    updateHUD();
+    renderPrompt();
+    r.ui.core.focus({ preventScroll: true });
+  }
+
+  function renderPrompt() {
+    var r = round;
+    var p = r.prompts[r.idx];
+    var core = r.ui.core;
+    core.style.transform = "";
+    clearHints();
+    // Экранным дикторам называем задание целиком (визуально подсказка скрыта, пока не включена)
+    var a11y = "Задание " + (r.idx + 1) + " из " + r.prompts.length + ". ";
+    if (r.drillId === "notes") {
+      var show = getSetting("showNames", false) || r.revealName;
+      a11y += "Нота " + noteName(p.answer) + " — сыграйте её на клавиатуре.";
+      core.setAttribute("aria-label", a11y);
+      core.innerHTML =
+        (r.melody ? '<p class="tr-chip">' + esc(r.melody.title) + "</p>" : "") +
+        staffSVG(p.answer) +
+        '<p class="tr-note-name' + (show ? "" : " muted") + '">' + (show ? noteName(p.answer) : "Какая это нота?") + "</p>";
+      if (r.revealName) pianoHint(p.answer);
+    } else if (r.drillId === "intervals") {
+      a11y += "От " + noteName(p.base) + " — " + p.iv.name + " вверх. Ответ: " + noteName(p.answer) + ".";
+      core.setAttribute("aria-label", a11y);
+      core.innerHTML =
+        staffSVG(p.base) +
+        '<p class="tr-task">От <b>' + noteName(p.base) + "</b> — " + p.iv.name + " вверх</p>";
+      if (r.revealName) pianoHint(p.answer);
+    } else {
+      a11y += "Прозвучала нота — найдите её на клавиатуре.";
+      core.setAttribute("aria-label", a11y);
+      core.innerHTML =
+        '<button type="button" class="tr-listen" data-role="listen" aria-label="Проиграть ноту ещё раз">' +
+        '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L13 19V5L7.5 9.5H4z"/><path d="M16.5 9a4.2 4.2 0 0 1 0 6"/><path d="M18.8 6.5a7.5 7.5 0 0 1 0 11"/></svg></button>' +
+        '<p class="tr-ear-hint">Нота прозвучала — найдите её</p>';
+      var b = core.querySelector('[data-role="listen"]');
+      b.addEventListener("click", function () { playTone(p.answer); });
+      playTone(p.answer);
+    }
+  }
+
+  function updateHUD() {
+    var r = round;
+    if (!r || !r.ui) return;
+    r.ui.progress.textContent = (r.idx + 1) + " / " + r.prompts.length;
+    r.ui.streak.textContent = String(r.streak);
+    r.ui.acc.textContent = r.done ? Math.round(100 * r.correct / r.done) + "%" : "—";
+  }
+
+  function setFeedback(text, cls) {
+    var r = round;
+    if (!r || !r.ui) return;
+    r.ui.feedback.textContent = text;
+    r.ui.feedback.className = "tr-feedback" + (cls ? " " + cls : "");
+  }
+
+  function handleAnswer(midi) {
+    var r = round;
+    if (!r || r.finishedAt) return;
+    if (r.startedAt === null) {
+      r.startedAt = performance.now();
+      var tick = function () {
+        if (round !== r || r.finishedAt) return;
+        r.ui.timer.textContent = fmtTime(performance.now() - r.startedAt);
+      };
+      tick();
+      r.timerId = setInterval(tick, 250);
+    }
+    var p = r.prompts[r.idx];
+    var res = roundAnswer(r, midi);
+    if (res.type === "bad") {
+      pianoFlash(midi, "bad");
+      r.revealName = true;
+      if (r.drillId === "notes" || r.drillId === "ear") {
+        renderPrompt();
+        setFeedback("Это " + noteName(p.answer) + " — верная клавиша подсвечена", "bad");
+      } else {
+        pianoHint(p.answer);
+        setFeedback("Верно было " + noteName(p.answer) + " — подсвеченная клавиша", "bad");
+      }
+      updateHUD();
+      return;
+    }
+    pianoFlash(midi, "ok");
+    r.revealName = false;
+    if (res.type === "repeat-ok") {
+      setFeedback("Верно — " + noteName(midi) + " (повтор, вне зачёта)", "ok");
+    } else if (p.firstTry) {
+      setFeedback("Верно — " + noteName(midi) + "!", "ok");
+    } else {
+      setFeedback("Верно — " + noteName(midi) + "! (после ошибки)", "ok");
+    }
+    if (r.idx >= r.prompts.length) finishRound();
+    else { renderPrompt(); updateHUD(); }
+  }
+
+  function navPrompt(dir) {
+    var r = round;
+    if (!r || r.finishedAt) return;
+    if (roundNav(r, dir)) {
+      r.revealName = false;
+      renderPrompt();
+      updateHUD();
+    }
+  }
+
+  function finishRound() {
+    var r = round;
+    r.finishedAt = performance.now();
+    clearInterval(r.timerId);
+    r.ui.timer.textContent = fmtTime(r.finishedAt - r.startedAt);
+    var stats = { timeMs: r.finishedAt - r.startedAt, acc: roundAcc(r), bestStreak: r.bestStreak };
+    var res = saveRecord(recordKey(r.drillId, r.levelId, r.melody), stats, r.melody ? r.melody.title : null);
+    renderSummary(r, stats, res);
+  }
+
+  function renderSummary(r, stats, res) {
+    stage.innerHTML =
+      '<div class="tr-summary">' +
+      "<h3>Раунд завершён</h3>" +
+      (r.melody ? '<p class="tr-chip">' + esc(r.melody.title) + "</p>" : "") +
+      '<div class="tr-results">' +
+      '<div class="tr-result"><span class="tr-stat-label">Время</span><span class="tr-result-value">' + fmtTime(stats.timeMs) + "</span>" + (res.isNewTime ? '<span class="tr-badge">Рекорд!</span>' : "") + "</div>" +
+      '<div class="tr-result"><span class="tr-stat-label">Точность</span><span class="tr-result-value">' + Math.round(stats.acc * 100) + "%</span>" + (res.isNewAcc ? '<span class="tr-badge">Рекорд!</span>' : "") + "</div>" +
+      '<div class="tr-result"><span class="tr-stat-label">Серия</span><span class="tr-result-value">' + stats.bestStreak + "</span>" + (res.isNewStreak ? '<span class="tr-badge">Рекорд!</span>' : "") + "</div>" +
+      "</div>" +
+      '<div class="tr-actions">' +
+      '<button type="button" class="primary" data-role="again">Ещё раз</button>' +
+      '<button type="button" class="ghost" data-role="toLevels">Другой уровень</button>' +
+      "</div></div>";
+    stage.querySelector('[data-role="again"]').addEventListener("click", function () {
+      startRound(r.drillId, r.levelId, r.melody);
+    });
+    stage.querySelector('[data-role="toLevels"]').addEventListener("click", function () {
+      round = null;
+      renderIntro(r.drillId);
+    });
+    stage.querySelector('[data-role="again"]').focus();
+  }
+
+  // ——— Свайп по карточке задания ———
+  function bindSwipe(core) {
+    var sw = null;
+    core.addEventListener("pointerdown", function (e) {
+      if (e.target.closest("button")) return; // кнопки внутри работают как обычно
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      sw = { x: e.clientX, id: e.pointerId };
+      try { core.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+    core.addEventListener("pointermove", function (e) {
+      if (!sw || e.pointerId !== sw.id) return;
+      var dx = e.clientX - sw.x;
+      if (Math.abs(dx) > 4) core.style.transform = "translateX(" + dx / 2.6 + "px)";
+    });
+    core.addEventListener("pointerup", function (e) {
+      if (!sw || e.pointerId !== sw.id) return;
+      var dx = e.clientX - sw.x;
+      core.style.transform = "";
+      sw = null;
+      if (dx < -38) navPrompt(1);
+      else if (dx > 38) navPrompt(-1);
+    });
+    core.addEventListener("pointercancel", function () { core.style.transform = ""; sw = null; });
+  }
+
+  // ——— Клавиатура компьютера: ноты и навигация заданий ———
+  var KEYMAP = { KeyA: 60, KeyW: 61, KeyS: 62, KeyE: 63, KeyD: 64, KeyF: 65, KeyT: 66, KeyG: 67, KeyY: 68, KeyH: 69, KeyU: 70, KeyJ: 71 };
+  document.addEventListener("keydown", function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (viewTr.hidden || !round || round.finishedAt || !round.ui) return;
+    if (e.target.closest && e.target.closest("input, select, textarea")) return;
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      e.preventDefault();
+      navPrompt(e.key === "ArrowLeft" ? -1 : 1);
+      return;
+    }
+    var m = KEYMAP[e.code];
+    if (m === undefined || e.repeat) return;
+    e.preventDefault();
+    pressKey(m);
+  });
+
+  renderCards();
 })();
 </script>
 </body>
