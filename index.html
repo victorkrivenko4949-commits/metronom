@@ -35,14 +35,14 @@
   --shadow: 0 18px 44px oklch(0.12 0.01 60 / 0.55);
 }
 
-:root, [data-theme="light"] {
+:root:not([data-theme="dark"]), [data-theme="light"] {
   --bg: oklch(0.965 0.012 82);
   --surface: oklch(0.995 0.006 85);
   --surface-2: oklch(0.945 0.014 82);
   --border: oklch(0.87 0.016 80);
   --text: oklch(0.26 0.018 62);
   --text-muted: oklch(0.5 0.018 66);
-  --accent: oklch(0.62 0.12 72);
+  --accent: oklch(0.56 0.115 72);
   --accent-ink: oklch(0.99 0.005 85);
   --shadow: 0 16px 38px oklch(0.6 0.02 70 / 0.16);
 }
@@ -117,11 +117,14 @@ body {
 
 .tempo { display: flex; align-items: center; justify-content: center; gap: var(--space-5); }
 .step {
-  width: 44px; height: 44px; border-radius: 50%;
+  width: 52px; height: 52px; flex: 0 0 52px; border-radius: 50%;
   border: 1px solid var(--border); background: var(--surface-2);
   color: var(--text); font-size: var(--text-lg); line-height: 1; cursor: pointer;
 }
 .step:hover { border-color: var(--accent); color: var(--accent); }
+.step { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.step:active, .step.holding { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.tempo-help { text-align: center; margin: var(--space-3) 0 var(--space-5); color: var(--text-muted); font-size: var(--text-xs); }
 .tempo-value { display: flex; align-items: baseline; gap: var(--space-2); }
 #bpmInput {
   width: 5.2ch; border: 0; background: transparent; color: var(--text);
@@ -240,7 +243,7 @@ button.primary.playing { background: transparent; color: var(--accent); }
 .field label.switch, .switch { display: flex; align-items: center; gap: var(--space-3); cursor: pointer; text-transform: none; letter-spacing: 0; font-size: var(--text-sm); color: var(--text); margin-bottom: var(--space-1); }
 .switch input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; margin: 0; }
 .field-note { margin: 0; color: var(--text-muted); font-size: var(--text-xs); }
-.field.off { opacity: .45; }
+.field.off select, .field.off input[type="range"] { opacity: .55; }
 .field.off select { cursor: not-allowed; }
 
 /* ——— Вкладки ——— */
@@ -319,6 +322,55 @@ button.primary.playing { background: transparent; color: var(--accent); }
 
 .tuner-error { margin-top: var(--space-4); }
 
+/* Основные действия всегда рядом с темпом, редкие настройки ниже. */
+button:focus-visible, summary:focus-visible, input:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 4px;
+}
+.panel { min-width: 0; }
+.player .eyebrow { margin-bottom: var(--space-2); }
+.pendulum { padding: var(--space-4) 0 var(--space-5); }
+.tempo { gap: var(--space-3); }
+.tempo-value { min-width: 0; flex-direction: column; align-items: center; gap: var(--space-1); }
+#bpmInput { width: 4.2ch; max-width: 100%; }
+.marking { margin-bottom: var(--space-4); }
+.playback { display: grid; grid-template-columns: 1fr auto; margin-top: var(--space-6); }
+.playback button { min-height: 48px; }
+.basic-settings { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); margin-top: var(--space-6); align-items: center; }
+.label-line { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); }
+.label-line output { color: var(--text-muted); font-size: var(--text-xs); font-variant-numeric: tabular-nums; }
+.save-section { width: 100%; margin-top: var(--space-5); }
+.advanced { border-top: 1px solid var(--border); margin-top: var(--space-6); padding-top: var(--space-4); }
+.advanced summary { cursor: pointer; font-weight: 700; font-size: var(--text-sm); padding: var(--space-2) 0; }
+.advanced summary::marker { color: var(--accent); }
+.advanced .row { margin-top: var(--space-4); }
+.field label { white-space: normal; }
+.field-note { margin-top: var(--space-2); }
+.training-chance { margin-top: var(--space-4); }
+.room-controls { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.room-controls button { padding-inline: var(--space-3); }
+#roomCode, #tA4 {
+  padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface-2); color: var(--text); font: inherit; min-width: 0;
+}
+#roomCode { width: 6.5em; text-transform: uppercase; }
+#tA4 { width: 100%; }
+.mini { width: 40px; height: 40px; }
+.item { grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-2); }
+.shortcut-help { padding-top: var(--space-4); margin: var(--space-5) 0 0; border-top: 1px solid var(--border); font-size: var(--text-xs); color: var(--text-muted); }
+kbd { font: inherit; padding: 0 var(--space-1); border: 1px solid var(--border); border-radius: 4px; background: var(--surface-2); }
+@media (max-width: 480px) {
+  .layout { padding-top: var(--space-6); }
+  .topbar { padding-block: var(--space-4); }
+  .tabs-wrap { padding-top: var(--space-5); }
+  .panel { padding: var(--space-5); }
+  .step { width: 48px; height: 48px; flex-basis: 48px; }
+  #bpmInput { font-size: clamp(3rem, 14vw, 4rem); }
+  .tempo { gap: var(--space-2); }
+  .row { grid-template-columns: minmax(0, 1fr); }
+  .basic-settings { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-3); }
+  .item { grid-template-columns: minmax(0, 1fr); }
+  .item-actions { justify-content: flex-end; }
+}
 </style>
 </head>
 <body>
@@ -339,11 +391,11 @@ button.primary.playing { background: transparent; color: var(--accent); }
 <nav class="tabs-wrap" aria-label="Режим работы">
   <div class="tabs" role="tablist">
     <button class="tab" id="tabMetronome" role="tab" type="button" aria-selected="true" aria-controls="metronomeView">Метроном</button>
-    <button class="tab" id="tabTuner" role="tab" type="button" aria-selected="false" aria-controls="tunerView">Тюнер</button>
+    <button class="tab" id="tabTuner" role="tab" type="button" aria-selected="false" aria-controls="tunerView" tabindex="-1">Тюнер</button>
   </div>
 </nav>
 
-<main class="layout" id="metronomeView">
+<main class="layout" id="metronomeView" role="tabpanel" aria-labelledby="tabMetronome">
   <section class="panel player" aria-label="Метроном">
     <p class="eyebrow" id="currentName">Без раздела</p>
 
@@ -352,19 +404,25 @@ button.primary.playing { background: transparent; color: var(--accent); }
     </div>
 
     <div class="tempo">
-      <button class="step" type="button" data-delta="-1" aria-label="Минус 1">−</button>
+      <button class="step" type="button" data-delta="-1" aria-label="Минус 1" aria-describedby="tempoHelp">−</button>
       <div class="tempo-value">
         <input id="bpmInput" type="number" min="1" max="500" value="90" inputmode="numeric" aria-label="Темп в ударах в минуту">
         <span class="unit">BPM</span>
       </div>
-      <button class="step" type="button" data-delta="1" aria-label="Плюс 1">+</button>
+      <button class="step" type="button" data-delta="1" aria-label="Плюс 1" aria-describedby="tempoHelp">+</button>
     </div>
     <p class="marking" id="marking">Andante</p>
+    <p class="tempo-help" id="tempoHelp">Удерживайте − или + для ускоренного изменения</p>
 
     <input id="bpmRange" class="slider" type="range" min="1" max="500" value="90" aria-label="Ползунок темпа">
     <div class="ticks"><span>1</span><span>125</span><span>250</span><span>375</span><span>500</span></div>
 
-    <div class="row">
+    <div class="controls playback">
+      <button class="primary" id="playBtn" type="button" aria-keyshortcuts="Space">Старт</button>
+      <button class="ghost" id="tapBtn" type="button" title="Нажмите несколько раз в нужном ритме">Тап темпа</button>
+    </div>
+
+    <div class="row basic-settings">
       <div class="field">
         <label for="subdiv">Деление</label>
         <select id="subdiv">
@@ -375,11 +433,22 @@ button.primary.playing { background: transparent; color: var(--accent); }
         </select>
       </div>
       <div class="field">
+        <div class="label-line"><label for="volume">Громкость</label><output id="volumeValue" for="volume">90%</output></div>
+        <input id="volume" type="range" min="0" max="100" value="90" class="slider slim">
+      </div>
+    </div>
+
+    <button class="ghost save-section" id="saveBtn" type="button">Сохранить как раздел</button>
+
+    <details class="advanced">
+      <summary>Ритм и тренировка</summary>
+      <div class="row">
+      <div class="field">
         <label class="switch">
           <input type="checkbox" id="accents">
           <span>Акценты по долям</span>
         </label>
-        <p class="field-note">Выключено — метроном стучит абсолютно одинаково.</p>
+        <p class="field-note">Выделять первую долю такта.</p>
       </div>
       <div class="field" id="beatsField">
         <label for="beats">Доли в такте</label>
@@ -393,31 +462,24 @@ button.primary.playing { background: transparent; color: var(--accent); }
           <input type="checkbox" id="randomBars">
           <span>Случайные тихие такты</span>
         </label>
-        <input id="randomChance" type="range" min="10" max="90" step="5" value="50" class="slider slim" style="margin-top: var(--space-3)">
-        <p class="field-note">Метроном случайно замолкает на такт — держите темп сами, а точки на экране проверяют точность. Первый такт всегда звучит.</p>
-      </div>
-      <div class="field">
-        <label for="volume">Громкость</label>
-        <input id="volume" type="range" min="0" max="100" value="80" class="slider slim">
+        <div class="label-line training-chance"><label for="randomChance">Вероятность паузы</label><output id="randomValue" for="randomChance">50%</output></div>
+        <input id="randomChance" type="range" min="10" max="90" step="5" value="50" class="slider slim">
+        <p class="field-note">Держите ритм сами, пока метроном молчит. Первый такт всегда звучит.</p>
       </div>
     </div>
+    </details>
 
-    <div class="controls">
-      <button class="primary" id="playBtn" type="button">Старт</button>
-      <button class="ghost" id="tapBtn" type="button">Тап темпа</button>
-      <button class="ghost" id="saveBtn" type="button">Сохранить как раздел</button>
-    </div>
-
-    <div class="field" id="roomBox" style="margin-top: var(--space-4)">
-      <label for="roomCode">Совместная игра (комната)</label>
-      <div class="controls" style="margin-top: var(--space-2)">
+    <details class="advanced" id="roomBox">
+      <summary>Совместная игра</summary>
+      <label class="field-note" for="roomCode">Создайте комнату или введите код из 5 символов</label>
+      <div class="room-controls">
         <button class="ghost" id="roomCreate" type="button">Создать комнату</button>
-        <input id="roomCode" type="text" maxlength="5" placeholder="Код" autocomplete="off" style="width:6em;text-transform:uppercase">
+        <input id="roomCode" type="text" maxlength="5" placeholder="Код" autocomplete="off" autocapitalize="characters" spellcheck="false">
         <button class="ghost" id="roomJoin" type="button">Войти</button>
         <button class="ghost" id="roomLeave" type="button" hidden>Выйти</button>
       </div>
-      <p class="field-note" id="roomStatus">Откройте метроном на нескольких устройствах, введите один код — темп и старт будут общими и синхронными.</p>
-    </div>
+      <p class="field-note" id="roomStatus" role="status">Один код для нескольких устройств: общий темп и синхронный старт.</p>
+    </details>
   </section>
 
   <aside class="panel library" aria-label="Разделы">
@@ -430,10 +492,11 @@ button.primary.playing { background: transparent; color: var(--accent); }
     <div class="empty" id="empty">
       <p>Пока пусто. Настройте темп и нажмите «Сохранить как раздел».</p>
     </div>
+    <p class="shortcut-help"><kbd>Пробел</kbd> старт / стоп<br>Нажмите на число BPM, чтобы ввести темп точно.</p>
   </aside>
 </main>
 
-<main class="layout" id="tunerView" hidden aria-label="Тюнер">
+<main class="layout" id="tunerView" hidden role="tabpanel" aria-labelledby="tabTuner">
   <section class="panel" aria-label="Тюнер">
     <p class="eyebrow">Гитарный тюнер</p>
 
@@ -751,11 +814,13 @@ function renderControls() {
   el.subdiv.value = String(state.subdiv);
   el.beats.value = String(state.beats);
   el.volume.value = Math.round(state.volume * 100);
+  document.getElementById("volumeValue").value = Math.round(state.volume * 100) + "%";
   el.accents.checked = state.accents;
   el.beats.disabled = !(state.accents || state.randomBars);
   el.beatsField.classList.toggle("off", !(state.accents || state.randomBars));
   el.randomBars.checked = state.randomBars;
   el.randomChance.value = Math.round(state.randomChance * 100);
+  document.getElementById("randomValue").value = Math.round(state.randomChance * 100) + "%";
   el.randomChance.disabled = !state.randomBars;
   el.randomField.classList.toggle("off", !state.randomBars);
   const active = state.sections.find(s => s.id === state.activeId);
@@ -836,7 +901,9 @@ function setBpm(value, silent) {
 
 // ——— Модальное окно —————————————————————————————————————————
 let editingId = null;
+let modalTrigger = null;
 function openModal(id) {
+  modalTrigger = document.activeElement;
   editingId = id || null;
   const s = id ? state.sections.find(x => x.id === id) : null;
   el.nameInput.value = s ? s.name : "";
@@ -846,7 +913,21 @@ function openModal(id) {
   el.modal.hidden = false;
   el.nameInput.focus();
 }
-function closeModal() { el.modal.hidden = true; editingId = null; }
+function closeModal() {
+  el.modal.hidden = true;
+  editingId = null;
+  if (modalTrigger && modalTrigger.isConnected) modalTrigger.focus();
+  else el.saveBtn.focus();
+}
+el.modal.addEventListener("keydown", e => {
+  if (e.key === "Escape") { e.preventDefault(); closeModal(); }
+  if (e.key === "Tab") {
+    const fields = [el.nameInput, el.cancelBtn, el.confirmBtn];
+    const i = fields.indexOf(document.activeElement);
+    if (e.shiftKey && i <= 0) { e.preventDefault(); el.confirmBtn.focus(); }
+    else if (!e.shiftKey && i === fields.length - 1) { e.preventDefault(); el.nameInput.focus(); }
+  }
+});
 
 el.confirmBtn.addEventListener("click", () => {
   const name = el.nameInput.value.trim() || `Раздел ${state.sections.length + 1}`;
@@ -864,7 +945,9 @@ el.confirmBtn.addEventListener("click", () => {
 });
 el.cancelBtn.addEventListener("click", closeModal);
 el.modal.addEventListener("click", e => { if (e.target === el.modal) closeModal(); });
-el.nameInput.addEventListener("keydown", e => { if (e.key === "Enter") el.confirmBtn.click(); });
+el.nameInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") { e.preventDefault(); el.confirmBtn.click(); }
+});
 
 // ——— События ——————————————————————————————————————————————
 el.playBtn.addEventListener("click", () => state.playing ? stop() : start());
@@ -878,9 +961,113 @@ el.bpmInput.addEventListener("input", e => {
 });
 el.bpmInput.addEventListener("blur", () => setBpm(el.bpmInput.value));
 
-document.querySelectorAll(".step").forEach(b => b.addEventListener("click", () => {
-  setBpm(state.bpm + Number(b.dataset.delta)); restartIfPlaying();
-}));
+// Tempo repeats change the live scheduler's BPM without resetting its beat/bar.
+// Room tempo updates are throttled during holds, then fully aligned on release.
+let tempoHold = null;
+const tempoPointerClicks = new WeakSet();
+
+function stepTempo(button) {
+  const delta = Math.sign(Number(button.dataset.delta));
+  const next = Math.min(500, Math.max(1, state.bpm + delta));
+  if (next === state.bpm) return;
+  if (state.playing && ctx) {
+    // Preserve the remaining beat fraction, not an old-tempo wait of up to 60 s.
+    // Notes already queued within LOOKAHEAD finish naturally without a restart.
+    const now = ctx.currentTime;
+    nextNoteTime = now + Math.max(0, nextNoteTime - now) * state.bpm / next;
+  }
+  setBpm(next);
+}
+
+function stopTempoHold() {
+  const hold = tempoHold;
+  if (!hold) return;
+  tempoHold = null;
+  clearTimeout(hold.timer);
+  hold.button.classList.remove("holding");
+  if (hold.pointerId !== undefined) {
+    try {
+      if (hold.button.hasPointerCapture(hold.pointerId)) {
+        hold.button.releasePointerCapture(hold.pointerId);
+      }
+    } catch (e) { /* The browser may already have released a canceled pointer. */ }
+  }
+}
+
+function beginTempoHold(button, input) {
+  stopTempoHold();
+  const hold = { button, ...input, startedAt: performance.now(), timer: null };
+  tempoHold = hold;
+  button.classList.add("holding");
+  stepTempo(button);
+  const repeat = () => {
+    if (tempoHold !== hold) return;
+    if (document.hidden || el.metronomeView.hidden || button.disabled) {
+      stopTempoHold();
+      return;
+    }
+    stepTempo(button);
+    // Keep 1-BPM precision; only the repeat interval accelerates: 140 → 35 ms.
+    const elapsed = performance.now() - hold.startedAt - 400;
+    const delay = Math.max(35, 140 - elapsed / 18);
+    hold.timer = setTimeout(repeat, delay);
+  };
+  hold.timer = setTimeout(repeat, 400);
+}
+
+document.querySelectorAll(".step").forEach(button => {
+  button.addEventListener("pointerdown", e => {
+    if (e.button !== 0 || e.isPrimary === false || button.disabled) return;
+    e.preventDefault();
+    button.focus({ preventScroll: true });
+    tempoPointerClicks.add(button);
+    beginTempoHold(button, { pointerId: e.pointerId });
+    try { button.setPointerCapture(e.pointerId); } catch (err) { /* Window listeners are the fallback. */ }
+  });
+  button.addEventListener("lostpointercapture", e => {
+    if (tempoHold?.button === button && tempoHold.pointerId === e.pointerId) stopTempoHold();
+  });
+  button.addEventListener("keydown", e => {
+    const key = e.code === "Space" || e.key === " " ? "Space" : e.key;
+    if (key !== "Space" && key !== "Enter") return;
+    e.preventDefault();
+    e.stopPropagation(); // Space on a tempo button must not toggle playback.
+    if (e.repeat || tempoHold || button.disabled) return;
+    beginTempoHold(button, { key });
+  });
+  button.addEventListener("blur", stopTempoHold);
+  button.addEventListener("contextmenu", e => e.preventDefault());
+  button.addEventListener("click", e => {
+    // Pointerdown already performed the first step. Native keyboard clicks are
+    // prevented above; detail=0 remains available to AT and button.click().
+    if (e.detail > 0 && tempoPointerClicks.has(button)) {
+      tempoPointerClicks.delete(button);
+      e.preventDefault();
+      return;
+    }
+    if (tempoHold?.button === button) return;
+    stepTempo(button);
+  });
+});
+
+for (const type of ["pointerup", "pointercancel"]) {
+  window.addEventListener(type, e => {
+    if (tempoHold?.pointerId === e.pointerId) stopTempoHold();
+  }, true);
+}
+document.addEventListener("keyup", e => {
+  const key = e.code === "Space" || e.key === " " ? "Space" : e.key;
+  if (tempoHold?.key !== key) return;
+  e.preventDefault();
+  stopTempoHold();
+}, true);
+window.addEventListener("blur", stopTempoHold);
+window.addEventListener("pagehide", stopTempoHold);
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) stopTempoHold();
+});
+el.tabMetronome.addEventListener("click", stopTempoHold, true);
+el.tabTuner.addEventListener("click", stopTempoHold, true);
 
 el.subdiv.addEventListener("change", e => { state.subdiv = Number(e.target.value); save(); restartIfPlaying(); });
 el.beats.addEventListener("change", e => { state.beats = Number(e.target.value); renderDots(); save(); restartIfPlaying(); });
@@ -891,7 +1078,11 @@ el.accents.addEventListener("change", e => {
   renderDots(); save(); restartIfPlaying();
 });
 
-el.volume.addEventListener("input", e => { setVolume(Number(e.target.value) / 100); save(); });
+el.volume.addEventListener("input", e => {
+  setVolume(Number(e.target.value) / 100);
+  document.getElementById("volumeValue").value = e.target.value + "%";
+  save();
+});
 
 el.randomBars.addEventListener("change", e => {
   state.randomBars = e.target.checked;
@@ -903,6 +1094,7 @@ el.randomBars.addEventListener("change", e => {
 });
 el.randomChance.addEventListener("input", e => {
   state.randomChance = Number(e.target.value) / 100;
+  document.getElementById("randomValue").value = e.target.value + "%";
   save();
 });
 
@@ -922,7 +1114,9 @@ el.tapBtn.addEventListener("click", () => {
 
 // Пробел — старт/стоп (только на вкладке метронома)
 document.addEventListener("keydown", e => {
-  if (e.code === "Space" && document.activeElement.tagName !== "INPUT" && el.modal.hidden && !el.metronomeView.hidden) {
+  const target = e.target;
+  if (target.closest("input, select, textarea, button, summary, a, [contenteditable]")) return;
+  if (e.code === "Space" && !e.repeat && el.modal.hidden && !el.metronomeView.hidden) {
     e.preventDefault();
     state.playing ? stop() : start();
   }
@@ -951,11 +1145,16 @@ const room = {
   const $ = id => document.getElementById(id);
   const status = t => { $("roomStatus").textContent = t; };
   const PREFIX = "metronom-room-";
-  let lastSig = "", pollId = null, pingId = null, samples = [];
+  let lastSig = "", lastSnapshot = null, pollId = null, pingId = null, samples = [];
+  let lastTempoSentAt = -Infinity, pendingTempoAlignment = false;
 
   const snap = () => ({ bpm: state.bpm, subdiv: state.subdiv, beats: state.beats, accents: state.accents,
     randomBars: state.randomBars, randomChance: state.randomChance, playing: state.playing });
   const sigOf = o => JSON.stringify([o.bpm, o.subdiv, o.beats, o.accents, o.randomBars, o.randomChance, o.playing]);
+  function rememberState(s) {
+    lastSnapshot = { ...s };
+    lastSig = sigOf(s);
+  }
 
   function loadPeerJS() {
     return new Promise((res, rej) => {
@@ -973,8 +1172,32 @@ const room = {
   function sendState(t0) {
     const s = snap();
     const msg = { type: "state", s, t0, seed: room.seed };
-    lastSig = sigOf(s);
+    rememberState(s);
+    pendingTempoAlignment = false;
     if (room.isHost) broadcast(msg); else if (room.hostConn?.open) room.hostConn.send(msg);
+  }
+
+  function sendTempo(s) {
+    const msg = { type: "tempo", bpm: s.bpm };
+    rememberState(s);
+    lastTempoSentAt = performance.now();
+    if (room.isHost) broadcast(msg); else if (room.hostConn?.open) room.hostConn.send(msg);
+  }
+
+  function applyRemoteTempo(msg) {
+    const bpm = Number(msg.bpm);
+    if (!Number.isFinite(bpm) || bpm < 1 || bpm > 500) return false;
+    const previousBpm = state.bpm;
+    setBpm(bpm, true);
+    if (state.playing && ctx) {
+      const now = ctx.currentTime;
+      // Peers may have queued different notes inside LOOKAHEAD. Retiming our own
+      // pending interval avoids rewinding to a note already queued locally.
+      nextNoteTime = now + Math.max(0, nextNoteTime - now) * previousBpm / state.bpm;
+    }
+    // A remote tempo must not acknowledge unrelated local changes still unsent.
+    rememberState({ ...(lastSnapshot || snap()), bpm: state.bpm });
+    return true;
   }
 
   function applyRemote(msg) {
@@ -983,7 +1206,8 @@ const room = {
     setBpm(s.bpm, true);
     Object.assign(state, { subdiv: s.subdiv, beats: s.beats, accents: s.accents, randomBars: s.randomBars, randomChance: s.randomChance });
     renderDots(); renderControls();
-    lastSig = sigOf(s);
+    rememberState(s);
+    pendingTempoAlignment = false;
     if (state.playing) stop();
     if (s.playing) start(msg.t0);
   }
@@ -996,6 +1220,8 @@ const room = {
       samples.push({ rtt, off: msg.h + rtt / 2 - now });
       if (samples.length > 8) samples.shift();
       room.offset = samples.reduce((a, b) => b.rtt < a.rtt ? b : a).off;
+    } else if (msg.type === "tempo") {
+      if (applyRemoteTempo(msg) && room.isHost) broadcast(msg, conn);
     } else if (msg.type === "state") {
       applyRemote(msg);
       if (room.isHost) broadcast(msg, conn);
@@ -1012,7 +1238,15 @@ const room = {
 
   function poll() {
     const s = snap(), sig = sigOf(s);
-    if (sig === lastSig) return;
+    const tempoOnly = lastSnapshot && sigOf({ ...s, bpm: lastSnapshot.bpm }) === lastSig;
+    if (tempoHold && tempoOnly) {
+      if (sig !== lastSig) {
+        pendingTempoAlignment = true;
+        if (performance.now() - lastTempoSentAt >= 300) sendTempo(s);
+      }
+      return;
+    }
+    if (sig === lastSig && !pendingTempoAlignment) return;
     let t0 = 0;
     if (s.playing) {
       t0 = room.now() + 250;
@@ -1025,7 +1259,9 @@ const room = {
     room.active = true;
     $("roomCreate").hidden = $("roomJoin").hidden = $("roomCode").hidden = true;
     $("roomLeave").hidden = false;
-    lastSig = sigOf(snap());
+    rememberState(snap());
+    lastTempoSentAt = -Infinity;
+    pendingTempoAlignment = false;
     pollId = setInterval(poll, 100);
   }
   function leave() {
@@ -1033,6 +1269,9 @@ const room = {
     try { room.peer?.destroy(); } catch (e) {}
     Object.assign(room, { active: false, isHost: false, peer: null, conns: [], hostConn: null, offset: 0 });
     samples = [];
+    lastSnapshot = null;
+    lastTempoSentAt = -Infinity;
+    pendingTempoAlignment = false;
     $("roomCreate").hidden = $("roomJoin").hidden = $("roomCode").hidden = false;
     $("roomLeave").hidden = true;
     status("Вы вышли из комнаты.");
@@ -1601,15 +1840,25 @@ window.TunerEngine = { GuitarTuner, PitchDetector, TUNINGS, NOTE_NAMES, noteToMi
 
   // ——— Вкладки ———
   function switchTab(name) {
+    stopTempoHold();
     const isMet = name === "metronome";
     el.metronomeView.hidden = !isMet;
     el.tunerView.hidden = isMet;
     el.tabMetronome.setAttribute("aria-selected", String(isMet));
     el.tabTuner.setAttribute("aria-selected", String(!isMet));
+    el.tabMetronome.tabIndex = isMet ? 0 : -1;
+    el.tabTuner.tabIndex = isMet ? -1 : 0;
     if (isMet && running) stopTuner();   // освобождаем микрофон
   }
   el.tabMetronome.addEventListener("click", () => switchTab("metronome"));
   el.tabTuner.addEventListener("click", () => switchTab("tuner"));
+  document.querySelector(".tabs").addEventListener("keydown", e => {
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
+    e.preventDefault();
+    const tuner = e.key === "End" || (e.key !== "Home" && el.tabMetronome.getAttribute("aria-selected") === "true");
+    switchTab(tuner ? "tuner" : "metronome");
+    (tuner ? el.tabTuner : el.tabMetronome).focus();
+  });
 
   // ——— Настройки ———
   for (const [value, label] of TUNING_LABELS) {
