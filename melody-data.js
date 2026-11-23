@@ -661,4 +661,6 @@ if (typeof module !== 'undefined') {
 }
 if (typeof window !== 'undefined') {
   window.MelodyData = MelodyData;
+  // Знаки альтерации (♯/♭) на нотном стане — отдельный браузерный модуль с DOM-логикой.
+  import('./staff-accidentals.js').catch(() => {});
 }
